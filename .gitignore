@@ -11,6 +11,7 @@
 
 ### Python ###
 __pychache__/
+*/__pycache__
 
 ### JupyterNotebooks ###
 .ipynb_checkpoints/
