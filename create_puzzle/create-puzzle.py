@@ -10,6 +10,18 @@ class piece_puzzle:
     def __init__(self, data):
         self.data = data
 
+    def right_side(self):
+        return self.data[:, -1]
+
+    def left_side(self):
+        return self.data[:, 0]
+
+    def up_side(self):
+        return self.data[0, :]
+
+    def down_side(self):
+        return self.data[-1, :]
+
 
 def create_puzzle(img,patch_size=100):
     puzzle_img = img[:(img.shape[0]//patch_size)*patch_size,:(img.shape[1]//patch_size)*patch_size]
