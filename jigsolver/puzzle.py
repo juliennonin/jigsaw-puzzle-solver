@@ -41,9 +41,9 @@ class Puzzle():
 
     def create(self):
         #for reproducibility
-        np.seed(self.seed)
+        np.random.seed(self.seed)
 
-        puzzle_img = img[:(img.shape[0] // self.patch_size) * self.patch_size, :(img.shape[1] // self.patch_size) * self.patch_size]
+        puzzle_img = self.img[:(self.img.shape[0] // self.patch_size) * self.patch_size, :(self.img.shape[1] // self.patch_size) * self.patch_size]
 
         plt.title("original image")
         plt.imshow(puzzle_img, 'gray')
@@ -57,8 +57,8 @@ class Puzzle():
         np.random.shuffle(list_pieces)
 
         self.pieces=list_pieces
-        self.hsize=(img.shape[0] // self.patch_size) * self.patch_size
-        self.vsize=(img.shape[1] // self.patch_size) * self.patch_size
+        self.hsize=(self.img.shape[0] // self.patch_size) * self.patch_size
+        self.vsize=(self.img.shape[1] // self.patch_size) * self.patch_size
 
         pass
 
