@@ -16,15 +16,19 @@ class Piece():
     def size(self):
         return len(self.picture)
 
+    @property
     def right_side(self):
         return self.data[:, -1]
 
+    @property
     def left_side(self):
         return self.data[:, 0]
 
+    @property
     def up_side(self):
         return self.data[0, :]
-
+        
+    @property
     def down_side(self):
         return self.data[-1, :]
 
