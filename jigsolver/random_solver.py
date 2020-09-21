@@ -4,19 +4,16 @@ from .puzzle import Piece
 def random_solver(puzzle,plotsteps=True):
 
     # Random solver
-    pieces_random_idx = np.arange(len(puzzle.pieces))
-    np.random.shuffle(pieces_random_idx)
-    solved_puzzle = np.copy(np.array(puzzle.pieces)[pieces_random_idx])
-
-    empty_piece = Piece(np.zeros((puzzle.patch_size,puzzle.patch_size,3)))
-    empty_puzzle = np.repeat(empty_piece,puzzle.vsize*puzzle.hsize/(puzzle.patch_size**2)) ## void image, with same size as puzzle image
-    puzzle.pieces = empty_puzzle
+    np.random.shuffle(puzzle.bag_of_pieces)
 
     # Simulate solver step by step
-    for i in range(len(solved_puzzle)):
-        puzzle.pieces[i] = solved_puzzle[i]
+    for i in range(puzzle.shape[0]):
+        for j in range(puzzle.shape[1]):
+            if puzzle.board[i][j] == None: ## If location empty
+                puzzle.board[i][j] = puzzle.bag_of_pieces[0]
+                puzzle.bag_of_pieces = puzzle.bag_of_pieces[1:]
 
-        if plotsteps == True :
-            puzzle.plot()
+                if plotsteps == True : # Plot puzzle at step
+                    puzzle.plot()
 
     return
