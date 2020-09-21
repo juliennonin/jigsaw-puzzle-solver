@@ -1,7 +1,6 @@
 import numpy as np
-import cv2
-import numpy as np
 import matplotlib.pyplot as plt
+from copy import copy, deepcopy
 
 class Piece():
     def __init__(self, picture):
@@ -33,62 +32,68 @@ class Piece():
         return self.data[-1, :]
 
 class Puzzle():
-    def __init__(self,img,patch_size=100,seed=0):
-        self.img = img
-        self.patch_size=patch_size
-        self.seed=0
-        self.pieces=[]
-        self.hsize=0
-        self.vsize=0
-        self.puzzle_img=None
+    def __init__(self, patch_size=100, seed=0):
+        self.patch_size = patch_size
+        self.seed = seed
+        self.bag_of_pieces = []
+        self.board = None
+        # hsize=0
+        # self.vsize=0
+        # self.puzzle_img=None
+
+    @property
+    def shape(self):
+        assert self.board, "Puzzle board is empty."
+        return (len(self.board), len(self.board[0]))
 
 
-    def create(self):
-        #for reproducibility
-        np.random.seed(self.seed)
+    def create_from_img(self, img):
+        np.random.seed(self.seed)  # for reproducibility
 
-        puzzle_img = self.img[:(self.img.shape[0] // self.patch_size) * self.patch_size, :(self.img.shape[1] // self.patch_size) * self.patch_size]
+        ## Crop the image for its size to be a multiple of the patch size
+        height, width, _ = img.shape
+        ps = self.patch_size
+        n_rows, n_columns = height // ps, width // ps
+        img_cropped = img[:n_rows * ps, :n_columns * ps]
+    
+        ## Populate the board
+        self.board = [[None] * n_columns for _ in range(n_rows)]
+        for i in range(n_rows):
+            for j in range(n_columns):
+                self.board[i][j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
 
-        plt.title("original image")
-        plt.imshow(puzzle_img, 'gray')
-        plt.show()
-
-        list_pieces = []
-        for i in np.arange(0, puzzle_img.shape[0], self.patch_size):
-            for j in np.arange(0, puzzle_img.shape[1], self.patch_size):
-                list_pieces.append(Piece(puzzle_img[i:i + self.patch_size, j:j + self.patch_size]))
-
-        np.random.shuffle(list_pieces)
-
-        self.pieces=list_pieces
-        self.hsize=(self.img.shape[0] // self.patch_size) * self.patch_size
-        self.vsize=(self.img.shape[1] // self.patch_size) * self.patch_size
-
-        pass
-
+    def shuffle(self):
+        n_rows, n_colums = self.shape
+        for i in range(n_rows):
+            for j in range(n_colums):
+                self.bag_of_pieces.append(self.board[i][j])
+                self.board[i][j] = None
+        np.random.shuffle(self.bag_of_pieces)
+        
     def plot(self):
+        assert self.board, "Puzzle board is empty"
+        n_rows, n_columns = self.shape
+        ps = self.patch_size
+        vsize, hsize = n_rows * ps, n_columns * ps
+        puzzle_plot = np.zeros([vsize, hsize, 3], dtype=int)
+        for i in range(n_rows):
+            for j in range(n_columns):
+                piece = self.board[i][j]
+                if piece:
+                    picture = piece.picture
+                else:
+                    picture = np.zeros((ps, ps, 3))
+                puzzle_plot[i*ps:(i+1)*ps, j*ps:(j+1)*ps, :] = picture
+            #     if i == 0:
+            #         plt.axvline(j*ps)
+            # plt.axhline(i*ps)
 
-        if len(self.pieces) == 0:
-            raise Exception("You should create puzzle before plotting it")
-
-        puzzle_img_random = np.zeros([self.hsize, self.vsize, 3], dtype=int)
-        for i in np.arange(0, self.hsize, self.patch_size):
-            for j in np.arange(0, self.vsize, self.patch_size):
-                puzzle_img_random[i:i + self.patch_size, j:j + self.patch_size, :] = \
-                    self.pieces[((self.vsize // self.patch_size) * i + j) // self.patch_size].picture
         plt.title("puzzle vision")
-        plt.imshow(puzzle_img_random, 'gray')
+        plt.imshow(puzzle_plot, 'gray')
         plt.show()
-        self.puzzle_img=puzzle_img_random
 
-
-if __name__ == '__main__':
-    import os
-    from os.path import dirname, join
-
-    img_folder = join(dirname(dirname(__file__)), 'img')
-
-    img = cv2.imread(join(img_folder, 'eiffel.jpg'))
-    Example=Puzzle(img,100)
-    Example.create()
-    Example.plot()
+    def __copy__(self):
+        new_puzzle = Puzzle(self.patch_size)
+        new_puzzle.bag_of_pieces = copy(self.bag_of_pieces)
+        new_puzzle.board = deepcopy(self.board)
+        return new_puzzle
