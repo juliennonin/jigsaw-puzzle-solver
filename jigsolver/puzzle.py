@@ -2,9 +2,43 @@ import numpy as np
 import matplotlib.pyplot as plt
 from copy import copy, deepcopy
 
+class Board():
+    def __init__(self, n_rows, n_cols, patch_size):
+        self._grid = [[Slot(patch_size) for j in range(n_cols)] for i in range(n_rows)]
+
+    def __getitem__(self, coords):
+        i, j = coords
+        return self._grid[i][j]
+
+    def __setitem__(self, coords, value):
+        i, j = coords
+        if isinstance(value, Slot) or isinstance(value, Piece):
+            self._grid[i][j] = value
+        else:
+            raise AttributeError("value must be an instance of Slot or Piece")
+
+    def __iter__(self):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                yield self._grid[i][j]
+
+    @property
+    def shape(self):
+        return (len(self._grid), len(self._grid[0]))
+
+class Slot():
+    def __init__(self, patch_size):
+        self.patch_size = patch_size
+
+    @property
+    def picture(self):
+            return np.zeros((self.patch_size, self.patch_size, 3))
+
+
+
 class Piece():
     def __init__(self, picture):
-        picture = np.array(picture)
+        picture = np.array(picture, dtype=int)
         assert picture.ndim == 3, "The picture must be 3-dimensional, i.e. of shape (n,n,3)"
         assert picture.shape[2] == 3, "Each pixel of the picture must have 3 color values"
         assert picture.shape[0] == picture.shape[1], "The image must not be rectangular but squared in shape"
@@ -31,6 +65,7 @@ class Piece():
     def down_side(self):
         return self.data[-1, :]
 
+
 class Puzzle():
     def __init__(self, patch_size=100, seed=0):
         self.patch_size = patch_size
@@ -44,7 +79,7 @@ class Puzzle():
     @property
     def shape(self):
         assert self.board, "Puzzle board is empty."
-        return (len(self.board), len(self.board[0]))
+        return self.board.shape
 
 
     def create_from_img(self, img):
@@ -57,20 +92,23 @@ class Puzzle():
         img_cropped = img[:n_rows * ps, :n_columns * ps]
     
         ## Populate the board
-        self.board = [[None] * n_columns for _ in range(n_rows)]
+        self.board = Board(n_rows, n_columns, ps)
         for i in range(n_rows):
             for j in range(n_columns):
-                self.board[i][j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+                self.board[i,j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+        return self
+
 
     def shuffle(self):
         n_rows, n_colums = self.shape
         for i in range(n_rows):
             for j in range(n_colums):
-                self.bag_of_pieces.append(self.board[i][j])
-                self.board[i][j] = None
+                self.bag_of_pieces.append(self.board[i,j])
+        self.board = Board(n_rows, n_colums, self.patch_size)
         np.random.shuffle(self.bag_of_pieces)
-        
-    def plot(self):
+
+
+    def display(self):
         assert self.board, "Puzzle board is empty"
         n_rows, n_columns = self.shape
         ps = self.patch_size
@@ -78,19 +116,11 @@ class Puzzle():
         puzzle_plot = np.zeros([vsize, hsize, 3], dtype=int)
         for i in range(n_rows):
             for j in range(n_columns):
-                piece = self.board[i][j]
-                if piece:
-                    picture = piece.picture
-                else:
-                    picture = np.zeros((ps, ps, 3))
-                puzzle_plot[i*ps:(i+1)*ps, j*ps:(j+1)*ps, :] = picture
-            #     if i == 0:
-            #         plt.axvline(j*ps)
-            # plt.axhline(i*ps)
-
-        plt.title("puzzle vision")
-        plt.imshow(puzzle_plot, 'gray')
+                puzzle_plot[i*ps:(i+1)*ps, j*ps:(j+1)*ps, :] = self.board[i,j].picture
+                
+        plt.imshow(puzzle_plot)
         plt.show()
+
 
     def __copy__(self):
         new_puzzle = Puzzle(self.patch_size)
