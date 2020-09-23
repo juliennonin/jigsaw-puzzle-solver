@@ -66,8 +66,9 @@ class Puzzle():
         n_rows, n_colums = self.shape
         for i in range(n_rows):
             for j in range(n_colums):
-                self.bag_of_pieces.append(self.board[i][j])
-                self.board[i][j] = None
+                if self.board[i][j] != None :
+                    self.bag_of_pieces.append(self.board[i][j])
+                    self.board[i][j] = None
         np.random.shuffle(self.bag_of_pieces)
         
     def plot(self):
