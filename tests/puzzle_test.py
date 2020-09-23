@@ -2,7 +2,8 @@ import unittest
 from jigsolver.puzzle import Puzzle
 import numpy as np
 from copy import copy
-
+import matplotlib.pyplot as plt
+import jigsolver
 
 class PuzzleTestCase(unittest.TestCase):
     def setUp(self):
@@ -10,8 +11,16 @@ class PuzzleTestCase(unittest.TestCase):
         self.puzzle = Puzzle(patch_size=3)
         self.puzzle.create_from_img(self.img)
 
+        img_real = plt.imread('../img/eiffel.jpg')
+        eiffel_puzzle = jigsolver.Puzzle(patch_size=100)
+        eiffel_puzzle.create_from_img(img_real)
+        self.eiffel_puzzle = eiffel_puzzle
+
     def test_create_puzzle_crop_test(self):
         self.assertEqual(self.puzzle.shape,(4,4))
+
+    def test_create_puzzle_crop_test_real_img(self):
+        self.assertEqual(self.eiffel_puzzle.shape,(4,7))
 
     def test_shuffle_puzzle(self):
         self.puzzle.shuffle()
@@ -19,11 +28,24 @@ class PuzzleTestCase(unittest.TestCase):
         empty_board = [[None]*4]*4
         self.assertEqual(self.puzzle.board,empty_board)
 
+    def test_shuffle_puzzle_real_img(self):
+        self.eiffel_puzzle.shuffle()
+        self.assertEqual(len(self.eiffel_puzzle.bag_of_pieces),28)
+        empty_board = [[None]*7]*4
+        self.assertEqual(self.eiffel_puzzle.board,empty_board)
+
     def test_puzzle_copy(self):
         self.puzzle_copy = copy(self.puzzle)
         self.puzzle.shuffle()
         self.assertNotEqual(self.puzzle.bag_of_pieces,self.puzzle_copy.bag_of_pieces)
         self.assertNotEqual(self.puzzle.board,self.puzzle_copy.board)
+
+
+    def test_puzzle_copy_real_img(self):
+        self.eiffel_puzzle_copy = copy(self.eiffel_puzzle)
+        self.eiffel_puzzle.shuffle()
+        self.assertNotEqual(self.eiffel_puzzle.bag_of_pieces,self.eiffel_puzzle_copy.bag_of_pieces)
+        self.assertNotEqual(self.eiffel_puzzle.board,self.eiffel_puzzle_copy.board)
 
 
 if __name__ == '__main__':
