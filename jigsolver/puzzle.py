@@ -26,6 +26,17 @@ class Board():
     def shape(self):
         return (len(self._grid), len(self._grid[0]))
 
+    def neighbors(self, i, j):
+        if i > 0:
+            yield self[i-1, j]
+        if j < self.shape[1]-1:
+            yield self[i, j+1]
+        if i < self.shape[0]-1:
+            yield self[i+1, j]
+        if j > 0:
+            yield self[i, j-1]
+
+
 class Slot():
     def __init__(self, patch_size):
         self.patch_size = patch_size
@@ -72,9 +83,6 @@ class Puzzle():
         self.seed = seed
         self.bag_of_pieces = []
         self.board = None
-        # hsize=0
-        # self.vsize=0
-        # self.puzzle_img=None
 
     @property
     def shape(self):
