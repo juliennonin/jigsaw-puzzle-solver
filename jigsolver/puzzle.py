@@ -15,10 +15,15 @@ class Piece():
         self.left_occu = False
         self.up_occu = False
         self.down_occu = False
+        self.in_space = False
+        self.number = 0
 
     @property
     def size(self):
         return len(self.picture)
+
+    def set_number(self, number):
+        self.number = number
 
     @property
     def right(self):
@@ -102,7 +107,11 @@ class Puzzle():
                 if self.board[i][j] != None :
                     self.bag_of_pieces.append(self.board[i][j])
                     self.board[i][j] = None
+                    self.bag_of_pieces[-1].set_number(7*i+j)
         np.random.shuffle(self.bag_of_pieces)
+
+    def get_piece(self,number):
+        return [e for e in filter(lambda x: x.number == number, self.bag_of_pieces)][0]
         
     def plot(self):
         '''Plot the Board of the Puzzle'''
@@ -132,5 +141,3 @@ class Puzzle():
         new_puzzle.bag_of_pieces = copy(self.bag_of_pieces)
         new_puzzle.board = deepcopy(self.board)
         return new_puzzle
-
-    def
