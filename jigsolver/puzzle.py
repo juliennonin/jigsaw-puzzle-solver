@@ -112,6 +112,67 @@ class Puzzle():
 
     def get_piece(self,number):
         return [e for e in filter(lambda x: x.number == number, self.bag_of_pieces)][0]
+
+    def set_piece_in_space(self,number):
+        for i in np.arange(len(self.bag_of_pieces)):
+            if number == self.bag_of_pieces[i].number:
+                self.bag_of_pieces[i].in_space = True
+
+    def set_right_side_occupied(self,number_piece):
+        for i in np.arange(len(self.bag_of_pieces)):
+            if number_piece == self.bag_of_pieces[i].number:
+                self.bag_of_pieces[i].right_occu = True
+
+    def set_left_side_occupied(self,number_piece):
+        for i in np.arange(len(self.bag_of_pieces)):
+            if number_piece == self.bag_of_pieces[i].number:
+                self.bag_of_pieces[i].left_occu = True
+
+    def set_up_side_occupied(self,number_piece):
+        for i in np.arange(len(self.bag_of_pieces)):
+            if number_piece == self.bag_of_pieces[i].number:
+                self.bag_of_pieces[i].up_occu = True
+
+    def set_down_side_occupied(self,number_piece):
+        for i in np.arange(len(self.bag_of_pieces)):
+            if number_piece == self.bag_of_pieces[i].number:
+                self.bag_of_pieces[i].down_occu = True
+
+
+    def place_piece_to_position(self,position,number_piece_to_place,side,number_piece_near):
+        self.board_space[position[0]][position[1]] = self.get_piece(number_piece_to_place)
+        self.set_piece_in_space(number_piece_to_place,position)
+
+        if position[0] == 0:
+            self.set_up_side_occupied(number_piece_to_place)
+
+        if position[1] == 0:
+            self.set_left_side_occupied(number_piece_to_place)
+
+        if position[0] == self.shape[0]-1:
+            self.set_down_side_occupied(number_piece_to_place)
+
+        if position[1] == self.shape[1]-1:
+            self.set_right_side_occupied(number_piece_to_place)
+
+        for i in np.arange(len(number_piece_near)):
+
+            if side[i] == 'right':
+                self.set_right_side_occupied(number_piece_near[i])
+            elif side[i] == 'left':
+                self.set_left_side_occupied(number_piece_near[i])
+
+            elif side[i] == 'up':
+                self.set_up_side_occupied(number_piece_near[i])
+
+            elif side[i] == 'down':
+                self.set_down_side_occupied(number_piece_near[i])
+
+            else:
+                return "error to place"
+
+
+
         
     def plot(self):
         '''Plot the Board of the Puzzle'''
