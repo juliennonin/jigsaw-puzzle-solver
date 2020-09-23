@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from copy import copy, deepcopy
+from skimage import io, color
 
 class Piece():
     def __init__(self, picture):
@@ -31,12 +32,24 @@ class Piece():
     def bottom_side(self):
         return self.picture[-1,:,:].reshape(1,3,3)
 
-    def diss(self,otherPiece):
+    def rgb_to_lab(self):
+        return color.rgb2lab(self.picture)
+
+    def lab_to_rgb(self):
+        return color.lab2rgb(self.picture)
+
+    def diss(self,otherPiece,lab_space=False):
+        if lab_space:
+            self.picture=self.rgb_to_lab()
+
         dict={}
         dict['L']=np.sum(np.power((otherPiece.left_side-self.right_side),2))
         dict['R']=np.sum(np.power((self.right_side-otherPiece.left_side),2))
         dict['U']=np.sum(np.power((otherPiece.bottom_side-self.up_side),2))
         dict['B'] = np.sum(np.power((self.bottom_side - otherPiece.up_side), 2))
+
+        self.picture=self.lab_to_rgb()
+
         return dict
 
 
