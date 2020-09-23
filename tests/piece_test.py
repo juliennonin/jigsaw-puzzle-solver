@@ -13,7 +13,7 @@ class PieceTestCase(unittest.TestCase):
             [[8, 5, 1], [4, 5, 0], [8, 5, 1]]
         ])
         piece = Piece(picture)
-        return self.assertEqual(piece.size, 3)
+        self.assertEqual(piece.size, 3)
 
     def test_piece_with_rectangular_picture_should_raise_error(self):
         picture = np.zeros((4, 5, 3))  # RGB picture of shape 4×5
@@ -30,6 +30,26 @@ class PieceTestCase(unittest.TestCase):
         with self.assertRaises(AssertionError):
             piece = Piece(picture)
 
+    def test_piece_dissimilarity(self):
+        #creating very simple pieces with only black and white pixels
+        A = np.zeros((3, 3, 3))
+        A[:, 0] = 1
+        A[:, -1] = 1
+        A[0, :] = 1
+        A[-1, :] = 1
+        A=Piece(A)
+
+        B = np.ones((3, 3, 3))
+        B[:, 0] = 0
+        B[:, -1] = 0
+
+
+        C = 1 - B
+        B = Piece(B)
+        C=Piece(C)
+
+        self.assertEqual(A.diss(B), {'L': 9.0, 'R': 9.0, 'U': 6.0, 'B': 6.0})
+        self.assertEqual(A.diss(C),{'L': 0.0, 'R': 0.0, 'U': 3.0, 'B': 3.0})
 
 
 if __name__ == '__main__':

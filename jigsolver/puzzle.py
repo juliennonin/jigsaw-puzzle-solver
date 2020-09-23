@@ -17,19 +17,28 @@ class Piece():
 
     @property
     def right_side(self):
-        return self.picture[:, -1]
+        return self.picture[:,-1,:].reshape(3,1,3)
 
     @property
     def left_side(self):
-        return self.picture[:, 0]
+        return self.picture[:,0,:].reshape(3,1,3)
 
     @property
     def up_side(self):
-        return self.picture[0, :]
+        return self.picture[0,:,:].reshape(1,3,3)
         
     @property
-    def down_side(self):
-        return self.picture[-1, :]
+    def bottom_side(self):
+        return self.picture[-1,:,:].reshape(1,3,3)
+
+    def diss(self,otherPiece):
+        dict={}
+        dict['L']=np.sum(np.power((otherPiece.left_side-self.right_side),2))
+        dict['R']=np.sum(np.power((self.right_side-otherPiece.left_side),2))
+        dict['U']=np.sum(np.power((otherPiece.bottom_side-self.up_side),2))
+        dict['B'] = np.sum(np.power((self.bottom_side - otherPiece.up_side), 2))
+        return dict
+
 
 class Puzzle():
     def __init__(self, patch_size=100, seed=0):
