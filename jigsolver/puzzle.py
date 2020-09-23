@@ -11,6 +11,10 @@ class Piece():
         assert picture.shape[0] == picture.shape[1], "The image must not be rectangular but squared in shape"
 
         self.picture = picture
+        self.right_occu = False
+        self.left_occu = False
+        self.up_occu = False
+        self.down_occu = False
 
     @property
     def size(self):
@@ -60,6 +64,7 @@ class Puzzle():
         self.seed = seed
         self.bag_of_pieces = []
         self.board = None
+        self.board_space = None
         # hsize=0
         # self.vsize=0
         # self.puzzle_img=None
@@ -83,9 +88,11 @@ class Puzzle():
     
         ## Populate the board
         self.board = [[None] * n_columns for _ in range(n_rows)]
+        self.board_space = self.board
         for i in range(n_rows):
             for j in range(n_columns):
                 self.board[i][j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+
 
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
@@ -125,3 +132,5 @@ class Puzzle():
         new_puzzle.bag_of_pieces = copy(self.bag_of_pieces)
         new_puzzle.board = deepcopy(self.board)
         return new_puzzle
+
+    def
