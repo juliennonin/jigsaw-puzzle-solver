@@ -17,19 +17,19 @@ class Piece():
         return len(self.picture)
 
     @property
-    def right_side(self):
+    def right(self):
         return self.picture[:,-1,:].reshape(3,1,3)
 
     @property
-    def left_side(self):
+    def left(self):
         return self.picture[:,0,:].reshape(3,1,3)
 
     @property
-    def up_side(self):
+    def up(self):
         return self.picture[0,:,:].reshape(1,3,3)
         
     @property
-    def bottom_side(self):
+    def bottom(self):
         return self.picture[-1,:,:].reshape(1,3,3)
 
     def rgb_to_lab(self):
@@ -39,16 +39,17 @@ class Piece():
         return color.lab2rgb(self.picture)
 
     def diss(self,otherPiece,lab_space=False):
+
         if lab_space:
-            self.picture=self.rgb_to_lab()
+            currentPiece=self.rgb_to_lab()
+        else:
+            currentPiece=self
 
         dict={}
-        dict['L']=np.sum(np.power((otherPiece.left_side-self.right_side),2))
-        dict['R']=np.sum(np.power((self.right_side-otherPiece.left_side),2))
-        dict['U']=np.sum(np.power((otherPiece.bottom_side-self.up_side),2))
-        dict['B'] = np.sum(np.power((self.bottom_side - otherPiece.up_side), 2))
-
-        self.picture=self.lab_to_rgb()
+        dict['L']=np.sum(np.power((otherPiece.left-currentPiece.right),2))
+        dict['R']=np.sum(np.power((currentPiece.right-otherPiece.left),2))
+        dict['U']=np.sum(np.power((otherPiece.bottom-currentPiece.up),2))
+        dict['B'] = np.sum(np.power((currentPiece.bottom - otherPiece.up), 2))
 
         return dict
 
