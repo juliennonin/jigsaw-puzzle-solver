@@ -17,19 +17,19 @@ class Piece():
 
     @property
     def right_side(self):
-        return self.data[:, -1]
+        return self.picture[:, -1]
 
     @property
     def left_side(self):
-        return self.data[:, 0]
+        return self.picture[:, 0]
 
     @property
     def up_side(self):
-        return self.data[0, :]
+        return self.picture[0, :]
         
     @property
     def down_side(self):
-        return self.data[-1, :]
+        return self.picture[-1, :]
 
 class Puzzle():
     def __init__(self, patch_size=100, seed=0):
@@ -43,11 +43,13 @@ class Puzzle():
 
     @property
     def shape(self):
+        '''Return the shape of the board of the Puzzle'''
         assert self.board, "Puzzle board is empty."
         return (len(self.board), len(self.board[0]))
 
 
     def create_from_img(self, img):
+        '''Create the pieces from an img and put them in the board'''
         np.random.seed(self.seed)  # for reproducibility
 
         ## Crop the image for its size to be a multiple of the patch size
@@ -63,6 +65,7 @@ class Puzzle():
                 self.board[i][j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
 
     def shuffle(self):
+        '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
         for i in range(n_rows):
             for j in range(n_colums):
@@ -72,6 +75,7 @@ class Puzzle():
         np.random.shuffle(self.bag_of_pieces)
         
     def plot(self):
+        '''Plot the Board of the Puzzle'''
         assert self.board, "Puzzle board is empty"
         n_rows, n_columns = self.shape
         ps = self.patch_size

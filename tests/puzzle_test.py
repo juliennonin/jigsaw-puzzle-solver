@@ -3,7 +3,6 @@ from jigsolver.puzzle import Puzzle
 import numpy as np
 from copy import copy
 import matplotlib.pyplot as plt
-import jigsolver
 
 class PuzzleTestCase(unittest.TestCase):
     def setUp(self):
@@ -11,10 +10,12 @@ class PuzzleTestCase(unittest.TestCase):
         self.puzzle = Puzzle(patch_size=3)
         self.puzzle.create_from_img(self.img)
 
-        img_real = plt.imread('../img/eiffel.jpg')
-        eiffel_puzzle = jigsolver.Puzzle(patch_size=100)
-        eiffel_puzzle.create_from_img(img_real)
-        self.eiffel_puzzle = eiffel_puzzle
+        img_real = plt.imread('img/eiffel.jpg')
+        self.eiffel_puzzle = Puzzle(patch_size=100)
+        self.eiffel_puzzle.create_from_img(img_real)
+    
+    def test_puzzle_create_piece_size(self):
+        return self.assertEqual(self.eiffel_puzzle.board[0][0].size, 100)
 
     def test_create_puzzle_crop_test(self):
         self.assertEqual(self.puzzle.shape,(4,4))

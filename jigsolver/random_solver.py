@@ -2,6 +2,7 @@ import numpy as np
 from .puzzle import Piece
 
 def random_solver(puzzle,plotsteps=True):
+    '''Solve a puzzle randomly'''
 
     # Random solver
     np.random.shuffle(puzzle.bag_of_pieces)
