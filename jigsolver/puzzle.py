@@ -100,6 +100,10 @@ class Piece():
 
         return dict
 
+    def __eq__(self, otherPiece):
+        return np.allclose(Piece.picture,otherPiece.picture)
+
+
 
 
 class Puzzle():
@@ -170,11 +174,32 @@ class Puzzle():
 
         assert self.bag_of_pieces, "A puzzle should be created"
 
-        A=[]
-        for Piece in self.bag_of_pieces:
-            A.append([Piece.diss(otherPiece) for otherPiece in self.bag_of_pieces])
+        CM=[]
 
-        return np.array(A)
+
+        for i,Piece in enumerate(self.bag_of_pieces):
+
+            bag_of_pieces=self.bag_of_pieces.copy()
+
+            f=lambda otherPiece: Piece.diss(otherPiece)
+            g=lambda otherPiece: list(Piece.diss(otherPiece).values())
+
+            CM.append([f(otherPiece) for otherPiece in bag_of_pieces])
+
+            #We don't count the current piece for the normalization
+            del bag_of_pieces[i]
+            Values = np.sort(list(map(g,bag_of_pieces))).reshape(-1)
+
+            sigma=Values[1]-Values[0]
+            h = lambda x: np.exp(-x/ (2 * (sigma ** 2)))
+
+            #Normalization
+            for diss in CM[-1]:
+                for key in ('L','R','U','B'):
+                    diss[key]=h(diss[key])
+
+
+        return np.array(CM)
 
 
     def __copy__(self):
