@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from copy import copy, deepcopy
+from skimage import io, color
 
 class Board():
     def __init__(self, n_rows, n_cols, patch_size):
@@ -61,20 +62,42 @@ class Piece():
         return len(self.picture)
 
     @property
-    def right_side(self):
-        return self.data[:, -1]
+    def right(self):
+        return self.picture[:,-1,:].reshape(3,1,3)
 
     @property
-    def left_side(self):
-        return self.data[:, 0]
+    def left(self):
+        return self.picture[:,0,:].reshape(3,1,3)
 
     @property
-    def up_side(self):
-        return self.data[0, :]
+    def up(self):
+        return self.picture[0,:,:].reshape(1,3,3)
         
     @property
-    def down_side(self):
-        return self.data[-1, :]
+    def bottom(self):
+        return self.picture[-1,:,:].reshape(1,3,3)
+
+    def rgb_to_lab(self):
+        return color.rgb2lab(self.picture)
+
+    def lab_to_rgb(self):
+        return color.lab2rgb(self.picture)
+
+    def diss(self,otherPiece,lab_space=False):
+
+        if lab_space:
+            currentPiece=self.rgb_to_lab()
+        else:
+            currentPiece=self
+
+        dict={}
+        dict['L']=np.sum(np.power((otherPiece.left-currentPiece.right),2))
+        dict['R']=np.sum(np.power((currentPiece.right-otherPiece.left),2))
+        dict['U']=np.sum(np.power((otherPiece.bottom-currentPiece.up),2))
+        dict['B'] = np.sum(np.power((currentPiece.bottom - otherPiece.up), 2))
+
+        return dict
+
 
 
 class Puzzle():
@@ -86,11 +109,13 @@ class Puzzle():
 
     @property
     def shape(self):
+        '''Return the shape of the board of the Puzzle'''
         assert self.board, "Puzzle board is empty."
         return self.board.shape
 
 
     def create_from_img(self, img):
+        '''Create the pieces from an img and put them in the board'''
         np.random.seed(self.seed)  # for reproducibility
 
         ## Crop the image for its size to be a multiple of the patch size
@@ -108,6 +133,7 @@ class Puzzle():
 
 
     def shuffle(self):
+        '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
         for i in range(n_rows):
             for j in range(n_colums):
