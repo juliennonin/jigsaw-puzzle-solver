@@ -142,7 +142,7 @@ class Puzzle():
         np.random.shuffle(self.bag_of_pieces)
 
 
-    def display(self):
+    def display(self, show_borders=True):
         assert self.board, "Puzzle board is empty"
         n_rows, n_columns = self.shape
         ps = self.patch_size
@@ -151,7 +151,15 @@ class Puzzle():
         for i in range(n_rows):
             for j in range(n_columns):
                 puzzle_plot[i*ps:(i+1)*ps, j*ps:(j+1)*ps, :] = self.board[i,j].picture
-                
+
+        if show_borders:
+            for i in range(n_rows):
+                plt.axhline(i*ps-.5, c="w")
+            for j in range(n_columns):
+                plt.axvline(j*ps-.5, c="w")
+        plt.xticks(np.arange(-.5, hsize+1, ps), np.arange(0, hsize+1, ps))
+        plt.yticks(np.arange(-.5, vsize+1, ps), np.arange(0, vsize+1, ps))
+    
         plt.imshow(puzzle_plot)
         plt.show()
 
