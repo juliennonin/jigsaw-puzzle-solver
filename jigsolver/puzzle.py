@@ -176,7 +176,6 @@ class Puzzle():
 
         CM=[]
 
-
         for i,Piece in enumerate(self.bag_of_pieces):
 
             bag_of_pieces=self.bag_of_pieces.copy()
