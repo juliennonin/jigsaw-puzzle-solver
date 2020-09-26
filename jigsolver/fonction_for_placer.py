@@ -1,3 +1,8 @@
+from jigsolver.puzzle import *
+import numpy as np
+from copy import copy
+import matplotlib.pyplot as plt
+
 def find_place_occupied(board):
     list_no_none=[]
     for i in np.arange(len(board)):
@@ -26,3 +31,33 @@ def position_to_place(board,n_row,n_column):
 
 
     return list_number_position_to_place
+
+
+def find_best_one_piece_to_one_place(board,n_row,n_column,position_number,puzzle,in_space_list):
+    row = position_number//n_column
+    column = position_number % n_column
+    diss_value = []
+    diss_value_list = []
+    not_in_space_list = list(set(list(range(n_row*n_column))).difference(set(in_space_list)))
+    n_average=0
+    for e in not_in_space_list:
+        if puzzle.get_piece(e).right_occu != True:
+            n_average=n_average+1
+            diss_value = puzzle.get_piece(e).diss(board[row][column])['R']
+        if puzzle.get_piece(e).left_occu != True:
+            n_average = n_average + 1
+            diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['L']
+        if puzzle.get_piece(e).up_occu != True:
+            n_average = n_average + 1
+            diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['U']
+        if puzzle.get_piece(e).down_occu != True:
+            n_average = n_average + 1
+            diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['B']
+
+        diss_value_list.append(diss_value/n_average)
+
+    return not_in_space_list[diss_value_list.index(min(diss_value_list))], min(diss_value_list)
+
+
+
+
