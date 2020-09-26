@@ -1,7 +1,28 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+from enum import Enum
 from copy import copy, deepcopy
 from skimage import io, color
+
+class Border(Enum):
+    def __new__(cls, value, slice):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.slice = slice
+        return obj
+    TOP = (0, np.index_exp[0,:])
+    RIGHT = (1, np.index_exp[:,-1])
+    BOTTOM = (2, np.index_exp[-1,:])
+    LEFT = (3, np.index_exp[:,0])
+
+    @property
+    def opposite(self):
+        opposite_value = (self.value + 2) % 4
+        if 0 <= opposite_value <= 3:
+            return Border(opposite_value)
+        raise NotImplementedError     
+
 
 class Board():
     def __init__(self, n_rows, n_cols, patch_size):
@@ -12,11 +33,10 @@ class Board():
         return self._grid[i][j]
 
     def __setitem__(self, coords, value):
+        assert isinstance(value, Slot) or isinstance(value, Piece), (
+            f"value is an instance of {type(value)} instead of Slot or Piece")
         i, j = coords
-        if isinstance(value, Slot) or isinstance(value, Piece):
-            self._grid[i][j] = value
-        else:
-            raise AttributeError("value must be an instance of Slot or Piece")
+        self._grid[i][j] = value
 
     def __iter__(self):
         for i in range(self.shape[0]):
@@ -28,16 +48,16 @@ class Board():
         return (len(self._grid), len(self._grid[0]))
 
     def neighbors(self, i, j):
-        #up
+        # top
         if i > 0:
             yield self[i-1, j]
-        #right
+        # right
         if j < self.shape[1]-1:
             yield self[i, j+1]
-        #down
+        # down
         if i < self.shape[0]-1:
             yield self[i+1, j]
-        #left
+        # left
         if j > 0:
             yield self[i, j-1]
 
@@ -65,21 +85,8 @@ class Piece():
     def size(self):
         return len(self.picture)
 
-    @property
-    def right(self):
-        return self.picture[:,-1,:].reshape(self.size,1,3)
-
-    @property
-    def left(self):
-        return self.picture[:,0,:].reshape(self.size,1,3)
-
-    @property
-    def up(self):
-        return self.picture[0,:,:].reshape(1,self.size,3)
-        
-    @property
-    def bottom(self):
-        return self.picture[-1,:,:].reshape(1,self.size,3)
+    def get_border(self, border):
+        return self.picture[border.slice]
 
     def rgb_to_lab(self):
         return color.rgb2lab(self.picture)
@@ -87,18 +94,17 @@ class Piece():
     def lab_to_rgb(self):
         return color.lab2rgb(self.picture)
 
-    def diss(self,otherPiece,lab_space=False):
-        '''Return the dissimilarities between the current Piece and the otherPiece for the four sides'''
+    def diss(self,other,lab_space=False):
+        '''Return the dissimilarities between the current Piece and the other for the four sides'''
 
         currentPiece=self.rgb_to_lab() if lab_space else self
 
-        dict={}
-        dict['L']=np.sum(np.power((otherPiece.right-currentPiece.left),2))
-        dict['R']=np.sum(np.power((currentPiece.right-otherPiece.left),2))
-        dict['U']=np.sum(np.power((otherPiece.bottom-currentPiece.up),2))
-        dict['B'] = np.sum(np.power((currentPiece.bottom - otherPiece.up), 2))
-
-        return dict
+        diss = {}
+        for border in Border:
+            diss[border] = np.sum(
+                np.power(self.get_border(border) - other.get_border(border.opposite), 2)
+            )
+        return diss
 
     def __eq__(self, otherPiece):
         return np.allclose(Piece.picture,otherPiece.picture)
@@ -194,8 +200,7 @@ class Puzzle():
 
             #Normalization
             for diss in CM[-1]:
-                for key in ('L','R','U','B'):
-                    diss[key]=h(diss[key])
+                diss = {k:h(v) for k, v in diss.items()}
 
 
         return np.array(CM)

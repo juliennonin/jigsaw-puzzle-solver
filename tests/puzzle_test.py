@@ -1,5 +1,5 @@
 import unittest
-from jigsolver.puzzle import Puzzle, Board, Slot
+from jigsolver import Puzzle, Board, Slot
 import numpy as np
 from copy import copy
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ class PuzzleTestCase(unittest.TestCase):
         self.eiffel_puzzle.create_from_img(img_real)
     
     def test_puzzle_create_piece_size(self):
-        return self.assertEqual(self.eiffel_puzzle.board[0,0].size, 100)
+        self.assertEqual(self.eiffel_puzzle.board[0,0].size, 100)
 
     def test_create_puzzle_crop_test(self):
         self.assertEqual(self.puzzle.shape,(4,4))

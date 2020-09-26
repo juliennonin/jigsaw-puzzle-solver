@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from jigsolver.puzzle import Piece,Puzzle
+from jigsolver import Border, Piece, Puzzle
 
 class PieceTestCase(unittest.TestCase):
     def setUp(self):
@@ -42,10 +42,20 @@ class PieceTestCase(unittest.TestCase):
         B = np.ones((3, 3, 3))
         B[1, 0] = 150
         B[1, 2] = 200
-        B=Piece(B)
+        B = Piece(B)
 
-        self.assertEqual(A.diss(B), {'L': 178206, 'R': 155706, 'U': 356409, 'B': 88209})
-        self.assertEqual(B.diss(A), {'L': 155706, 'R': 178206, 'U': 88209, 'B': 356409})
+        diss = {
+            Border.TOP: 356409,
+            Border.BOTTOM: 88209,
+            Border.RIGHT: 155706,
+            Border.LEFT: 178206
+        }
+
+        self.assertDictEqual(A.diss(B), diss)
+
+        diss[Border.TOP], diss[Border.BOTTOM] = diss[Border.BOTTOM], diss[Border.TOP]
+        diss[Border.LEFT], diss[Border.RIGHT] = diss[Border.RIGHT], diss[Border.LEFT]
+        self.assertDictEqual(B.diss(A), diss)
 
 
 if __name__ == '__main__':
