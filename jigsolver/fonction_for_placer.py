@@ -4,13 +4,13 @@ from copy import copy
 import matplotlib.pyplot as plt
 
 def find_place_occupied(board):
-    list_no_none=[]
-    for i in np.arange(len(board)):
-        for j in np.arange(len(board[0])):
-            if board[i][j] != None:
-                list_no_none.append([i,j])
+    list_occupied=[]
+    for i in np.arange(board.n_rows):
+        for j in np.arange(board.n_cols):
+            if isinstance(board.__getitem__([i,j]),Piece):
+                list_occupied.append([i,j])
 
-    return list_no_none
+    return list_occupied
 
 def position_to_place(board,n_row,n_column):
     list_no_none = find_place_occupied(board)
