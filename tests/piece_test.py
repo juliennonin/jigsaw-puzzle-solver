@@ -8,7 +8,7 @@ class PieceTestCase(unittest.TestCase):
 
     def test_piece_size_should_return_size(self):
         picture = np.array([
-            [[1, 1, 1], [1, 2, 3], [4, 5, 6]], 
+            [[1, 1, 1], [1, 2, 3], [4, 5, 6]],
             [[0, 1, 2], [5, 3, 0], [0, 1, 4]],
             [[8, 5, 1], [4, 5, 0], [8, 5, 1]]
         ])
@@ -31,25 +31,21 @@ class PieceTestCase(unittest.TestCase):
             piece = Piece(picture)
 
     def test_piece_dissimilarity(self):
-        #creating very simple pieces with only black and white pixels
+        #creating very simple pieces
         A = np.zeros((3, 3, 3))
-        A[:, 0] = 1
-        A[:, -1] = 1
-        A[0, :] = 1
-        A[-1, :] = 1
-        A=Piece(A)
+        A[:, 0] = 100
+        A[:, -1] = 200
+        A[0, :] = 200
+        A[-1, :] = 100
+        A = Piece(A)
 
         B = np.ones((3, 3, 3))
-        B[:, 0] = 0
-        B[:, -1] = 0
+        B[1, 0] = 150
+        B[1, 2] = 200
+        B=Piece(B)
 
-
-        C = 1 - B
-        B = Piece(B)
-        C=Piece(C)
-
-        self.assertEqual(A.diss(B), {'L': 9.0, 'R': 9.0, 'U': 6.0, 'B': 6.0})
-        self.assertEqual(A.diss(C),{'L': 0.0, 'R': 0.0, 'U': 3.0, 'B': 3.0})
+        self.assertEqual(A.diss(B), {'L': 178206, 'R': 155706, 'U': 356409, 'B': 88209})
+        self.assertEqual(B.diss(A), {'L': 155706, 'R': 178206, 'U': 88209, 'B': 356409})
 
 
 if __name__ == '__main__':

@@ -28,12 +28,16 @@ class Board():
         return (len(self._grid), len(self._grid[0]))
 
     def neighbors(self, i, j):
+        #up
         if i > 0:
             yield self[i-1, j]
+        #right
         if j < self.shape[1]-1:
             yield self[i, j+1]
+        #down
         if i < self.shape[0]-1:
             yield self[i+1, j]
+        #left
         if j > 0:
             yield self[i, j-1]
 
@@ -63,19 +67,19 @@ class Piece():
 
     @property
     def right(self):
-        return self.picture[:,-1,:].reshape(3,1,3)
+        return self.picture[:,-1,:].reshape(self.size,1,3)
 
     @property
     def left(self):
-        return self.picture[:,0,:].reshape(3,1,3)
+        return self.picture[:,0,:].reshape(self.size,1,3)
 
     @property
     def up(self):
-        return self.picture[0,:,:].reshape(1,3,3)
+        return self.picture[0,:,:].reshape(1,self.size,3)
         
     @property
     def bottom(self):
-        return self.picture[-1,:,:].reshape(1,3,3)
+        return self.picture[-1,:,:].reshape(1,self.size,3)
 
     def rgb_to_lab(self):
         return color.rgb2lab(self.picture)
@@ -84,19 +88,21 @@ class Piece():
         return color.lab2rgb(self.picture)
 
     def diss(self,otherPiece,lab_space=False):
+        '''Return the dissimilarities between the current Piece and the otherPiece for the four sides'''
 
-        if lab_space:
-            currentPiece=self.rgb_to_lab()
-        else:
-            currentPiece=self
+        currentPiece=self.rgb_to_lab() if lab_space else self
 
         dict={}
-        dict['L']=np.sum(np.power((otherPiece.left-currentPiece.right),2))
+        dict['L']=np.sum(np.power((otherPiece.right-currentPiece.left),2))
         dict['R']=np.sum(np.power((currentPiece.right-otherPiece.left),2))
         dict['U']=np.sum(np.power((otherPiece.bottom-currentPiece.up),2))
         dict['B'] = np.sum(np.power((currentPiece.bottom - otherPiece.up), 2))
 
         return dict
+
+    def __eq__(self, otherPiece):
+        return np.allclose(Piece.picture,otherPiece.picture)
+
 
 
 
@@ -162,6 +168,37 @@ class Puzzle():
     
         plt.imshow(puzzle_plot)
         plt.show()
+
+    def get_compatibilities(self):
+        "Return the compatibility matrix associated to our current puzzle"
+
+        assert self.bag_of_pieces, "A puzzle should be created"
+
+        CM=[]
+
+        for i,Piece in enumerate(self.bag_of_pieces):
+
+            bag_of_pieces=self.bag_of_pieces.copy()
+
+            f=lambda otherPiece: Piece.diss(otherPiece)
+            g=lambda otherPiece: list(Piece.diss(otherPiece).values())
+
+            CM.append([f(otherPiece) for otherPiece in bag_of_pieces])
+
+            #We don't count the current piece for the normalization
+            del bag_of_pieces[i]
+            Values = np.sort(list(map(g,bag_of_pieces))).reshape(-1)
+
+            sigma=Values[1]-Values[0]
+            h = lambda x: np.exp(-x/ (2 * (sigma ** 2)))
+
+            #Normalization
+            for diss in CM[-1]:
+                for key in ('L','R','U','B'):
+                    diss[key]=h(diss[key])
+
+
+        return np.array(CM)
 
 
     def __copy__(self):
