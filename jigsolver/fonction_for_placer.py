@@ -41,22 +41,31 @@ def find_best_one_piece_to_one_place(board,n_row,n_column,position_number,puzzle
     not_in_space_list = list(set(list(range(n_row*n_column))).difference(set(in_space_list)))
     n_average=0
     for e in not_in_space_list:
-        if puzzle.get_piece(e).right_occu != True:
-            n_average=n_average+1
-            diss_value = puzzle.get_piece(e).diss(board[row][column])['R']
-        if puzzle.get_piece(e).left_occu != True:
-            n_average = n_average + 1
-            diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['L']
-        if puzzle.get_piece(e).up_occu != True:
-            n_average = n_average + 1
-            diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['U']
-        if puzzle.get_piece(e).down_occu != True:
-            n_average = n_average + 1
-            diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['B']
+        if column != (n_column-1):
+            if board[row][column+1] is not None:
+                n_average=n_average+1
+                diss_value = puzzle.get_piece(e).diss(board[row][column+1])['R']
+        if column != 0:
+            if board[row][column-1] is not None:
+                n_average = n_average + 1
+                diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column-1])['L']
+        if row !=  n_row-1:
+            if board[row+1][column] is not None:
+                n_average = n_average + 1
+                diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['B']
+        if row != 0:
+            if board[row-1][column] is not None:
+                n_average = n_average + 1
+                diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['U']
 
         diss_value_list.append(diss_value/n_average)
 
     return not_in_space_list[diss_value_list.index(min(diss_value_list))], min(diss_value_list)
+
+# def decide_piece_to_add():
+#
+#
+#     return
 
 
 
