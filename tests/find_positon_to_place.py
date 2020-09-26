@@ -12,7 +12,7 @@ class PuzzleTestCase(unittest.TestCase):
         self.eiffel_puzzle.create_from_img(img_real)
         self.eiffel_puzzle.shuffle()
 
-        self.test = [[None] * 7 for _ in range(4)]
+        self.test = [[None] * self.eiffel_puzzle.shape[1] for _ in range(self.eiffel_puzzle.shape[0])]
 
         self.test[2][2]=self.eiffel_puzzle.get_piece(3)
         self.test[2][3]=self.eiffel_puzzle.get_piece(2)
@@ -21,7 +21,7 @@ class PuzzleTestCase(unittest.TestCase):
         self.test[2][2].right_occu = True
 
     def test_find_position_to_place(self):
-        return self.assertEqual(position_to_place(self.test,4,7), [18, 23, 24, 9, 10, 15])
+        return self.assertEqual(position_to_place(self.test,self.eiffel_puzzle.shape[0],self.eiffel_puzzle.shape[1]), [18, 23, 24, 9, 10, 15])
 
 
 
