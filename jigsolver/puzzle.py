@@ -3,9 +3,58 @@ import matplotlib.pyplot as plt
 from copy import copy, deepcopy
 from skimage import io, color
 
+class Board():
+    def __init__(self, n_rows, n_cols, patch_size):
+        self._grid = [[Slot(patch_size) for j in range(n_cols)] for i in range(n_rows)]
+
+    def __getitem__(self, coords):
+        i, j = coords
+        return self._grid[i][j]
+
+    def __setitem__(self, coords, value):
+        i, j = coords
+        if isinstance(value, Slot) or isinstance(value, Piece):
+            self._grid[i][j] = value
+        else:
+            raise AttributeError("value must be an instance of Slot or Piece")
+
+    def __iter__(self):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                yield self._grid[i][j]
+
+    @property
+    def shape(self):
+        return (len(self._grid), len(self._grid[0]))
+
+    def neighbors(self, i, j):
+        #up
+        if i > 0:
+            yield self[i-1, j]
+        #right
+        if j < self.shape[1]-1:
+            yield self[i, j+1]
+        #down
+        if i < self.shape[0]-1:
+            yield self[i+1, j]
+        #left
+        if j > 0:
+            yield self[i, j-1]
+
+
+class Slot():
+    def __init__(self, patch_size):
+        self.patch_size = patch_size
+
+    @property
+    def picture(self):
+            return np.zeros((self.patch_size, self.patch_size, 3))
+
+
+
 class Piece():
     def __init__(self, picture):
-        picture = np.array(picture)
+        picture = np.array(picture, dtype=int)
         assert picture.ndim == 3, "The picture must be 3-dimensional, i.e. of shape (n,n,3)"
         assert picture.shape[2] == 3, "Each pixel of the picture must have 3 color values"
         assert picture.shape[0] == picture.shape[1], "The image must not be rectangular but squared in shape"
@@ -27,19 +76,19 @@ class Piece():
 
     @property
     def right(self):
-        return self.picture[:,-1,:].reshape(3,1,3)
+        return self.picture[:,-1,:].reshape(self.size,1,3)
 
     @property
     def left(self):
-        return self.picture[:,0,:].reshape(3,1,3)
+        return self.picture[:,0,:].reshape(self.size,1,3)
 
     @property
     def up(self):
-        return self.picture[0,:,:].reshape(1,3,3)
+        return self.picture[0,:,:].reshape(1,self.size,3)
         
     @property
     def bottom(self):
-        return self.picture[-1,:,:].reshape(1,3,3)
+        return self.picture[-1,:,:].reshape(1,self.size,3)
 
     def rgb_to_lab(self):
         return color.rgb2lab(self.picture)
@@ -48,19 +97,22 @@ class Piece():
         return color.lab2rgb(self.picture)
 
     def diss(self,otherPiece,lab_space=False):
+        '''Return the dissimilarities between the current Piece and the otherPiece for the four sides'''
 
-        if lab_space:
-            currentPiece=self.rgb_to_lab()
-        else:
-            currentPiece=self
+        currentPiece=self.rgb_to_lab() if lab_space else self
 
         dict={}
-        dict['L']=np.sum(np.power((otherPiece.left-currentPiece.right),2))
+        dict['L']=np.sum(np.power((otherPiece.right-currentPiece.left),2))
         dict['R']=np.sum(np.power((currentPiece.right-otherPiece.left),2))
         dict['U']=np.sum(np.power((otherPiece.bottom-currentPiece.up),2))
         dict['B'] = np.sum(np.power((currentPiece.bottom - otherPiece.up), 2))
 
         return dict
+
+    def __eq__(self, otherPiece):
+        return np.allclose(Piece.picture,otherPiece.picture)
+
+
 
 
 class Puzzle():
@@ -69,16 +121,12 @@ class Puzzle():
         self.seed = seed
         self.bag_of_pieces = []
         self.board = None
-        self.board_space = None
-        # hsize=0
-        # self.vsize=0
-        # self.puzzle_img=None
 
     @property
     def shape(self):
         '''Return the shape of the board of the Puzzle'''
         assert self.board, "Puzzle board is empty."
-        return (len(self.board), len(self.board[0]))
+        return self.board.shape
 
 
     def create_from_img(self, img):
@@ -92,11 +140,12 @@ class Puzzle():
         img_cropped = img[:n_rows * ps, :n_columns * ps]
     
         ## Populate the board
-        self.board = [[None] * n_columns for _ in range(n_rows)]
-        self.board_space = self.board
+        self.board = Board(n_rows, n_columns, ps)
         for i in range(n_rows):
             for j in range(n_columns):
-                self.board[i][j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+                self.board[i,j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+        return self
+
 
 
     def shuffle(self):
@@ -104,10 +153,10 @@ class Puzzle():
         n_rows, n_colums = self.shape
         for i in range(n_rows):
             for j in range(n_colums):
+                self.bag_of_pieces.append(self.board[i, j])
                 if self.board[i][j] != None :
-                    self.bag_of_pieces.append(self.board[i][j])
-                    self.board[i][j] = None
                     self.bag_of_pieces[-1].set_number(7*i+j)
+        self.board = Board(n_rows, n_colums, self.patch_size)
         np.random.shuffle(self.bag_of_pieces)
 
     def get_piece(self,number):
@@ -172,10 +221,7 @@ class Puzzle():
                 return "error to place"
 
 
-
-        
-    def plot(self):
-        '''Plot the Board of the Puzzle'''
+    def display(self, show_borders=True):
         assert self.board, "Puzzle board is empty"
         n_rows, n_columns = self.shape
         ps = self.patch_size
@@ -183,19 +229,50 @@ class Puzzle():
         puzzle_plot = np.zeros([vsize, hsize, 3], dtype=int)
         for i in range(n_rows):
             for j in range(n_columns):
-                piece = self.board[i][j]
-                if piece:
-                    picture = piece.picture
-                else:
-                    picture = np.zeros((ps, ps, 3))
-                puzzle_plot[i*ps:(i+1)*ps, j*ps:(j+1)*ps, :] = picture
-            #     if i == 0:
-            #         plt.axvline(j*ps)
-            # plt.axhline(i*ps)
+                puzzle_plot[i*ps:(i+1)*ps, j*ps:(j+1)*ps, :] = self.board[i,j].picture
 
-        plt.title("puzzle vision")
-        plt.imshow(puzzle_plot, 'gray')
+        if show_borders:
+            for i in range(n_rows):
+                plt.axhline(i*ps-.5, c="w")
+            for j in range(n_columns):
+                plt.axvline(j*ps-.5, c="w")
+        plt.xticks(np.arange(-.5, hsize+1, ps), np.arange(0, hsize+1, ps))
+        plt.yticks(np.arange(-.5, vsize+1, ps), np.arange(0, vsize+1, ps))
+    
+        plt.imshow(puzzle_plot)
         plt.show()
+
+    def get_compatibilities(self):
+        "Return the compatibility matrix associated to our current puzzle"
+
+        assert self.bag_of_pieces, "A puzzle should be created"
+
+        CM=[]
+
+        for i,Piece in enumerate(self.bag_of_pieces):
+
+            bag_of_pieces=self.bag_of_pieces.copy()
+
+            f=lambda otherPiece: Piece.diss(otherPiece)
+            g=lambda otherPiece: list(Piece.diss(otherPiece).values())
+
+            CM.append([f(otherPiece) for otherPiece in bag_of_pieces])
+
+            #We don't count the current piece for the normalization
+            del bag_of_pieces[i]
+            Values = np.sort(list(map(g,bag_of_pieces))).reshape(-1)
+
+            sigma=Values[1]-Values[0]
+            h = lambda x: np.exp(-x/ (2 * (sigma ** 2)))
+
+            #Normalization
+            for diss in CM[-1]:
+                for key in ('L','R','U','B'):
+                    diss[key]=h(diss[key])
+
+
+        return np.array(CM)
+
 
     def __copy__(self):
         new_puzzle = Puzzle(self.patch_size)
