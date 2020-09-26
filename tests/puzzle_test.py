@@ -10,7 +10,7 @@ class PuzzleTestCase(unittest.TestCase):
         self.puzzle = Puzzle(patch_size=3)
         self.puzzle.create_from_img(self.img)
 
-        img_real = plt.imread('img/eiffel.jpg')
+        img_real = plt.imread('../img/eiffel.jpg')
         self.eiffel_puzzle = Puzzle(patch_size=100)
         self.eiffel_puzzle.create_from_img(img_real)
     
