@@ -32,20 +32,20 @@ class PieceTestCase(unittest.TestCase):
 
     def test_piece_dissimilarity(self):
         #creating very simple pieces
-        A = np.zeros((3, 3, 3))
-        A[:, 0] = 100
-        A[:, -1] = 200
-        A[0, :] = 200
-        A[-1, :] = 100
-        A = Piece(A)
+        A = np.zeros((2, 2, 3)).astype(int)
+        B = A.copy()
 
-        B = np.ones((3, 3, 3))
-        B[1, 0] = 150
-        B[1, 2] = 200
+        A[:, 0] = 1
+        A[:, 1] = 2
+        A=Piece(A)
+
+        B[:, 0] = 5
+        B[:, 1] = 1
         B=Piece(B)
 
-        self.assertEqual(A.diss(B), {'L': 178206, 'R': 155706, 'U': 356409, 'B': 88209})
-        self.assertEqual(B.diss(A), {'L': 155706, 'R': 178206, 'U': 88209, 'B': 356409})
+        self.assertEqual(A.diss(B), {'L': 0, 'R': 54, 'U': 51, 'B': 51})
+        self.assertEqual(B.diss(A), {'L': 54, 'R': 0, 'U': 51, 'B': 51})
+
 
 
 if __name__ == '__main__':
