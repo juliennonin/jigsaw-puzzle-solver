@@ -3,71 +3,104 @@ import numpy as np
 from copy import copy
 import matplotlib.pyplot as plt
 
-def find_place_occupied(board):
-    n_row, n_col = board.shape
-    list_occupied=[]
-    for i in np.arange(n_row):
-        for j in np.arange(n_col):
-            if isinstance(board.__getitem__([i,j]),Piece):
-                list_occupied.append([i,j])
+def find_place_occupied(puzzle):
+    list_place_occupied=[]
+    n_rows, n_cols = puzzle.board.shape
+    for i in np.arange(n_rows):
+        for j in np.arange(n_cols):
+            if isinstance(puzzle.board.__getitem__([i,j]),Piece):
+                list_place_occupied.append(i*puzzle.board.shape[1]+j)
 
-    return list_occupied
+    return list_place_occupied
 
-def position_to_place(board):
-    list_occupied = find_place_occupied(board)
+def position_to_place(puzzle):
+    n_rows, n_cols = puzzle.board.shape
+    list_place_occupied = find_place_occupied(puzzle)
     list_number_position_to_place=[]
-    n_rows, n_cols = board.shape
-    for e in list_occupied:
 
-        if board._grid[e[0]][e[1]].right_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e[0]*n_cols+e[1]+1])))
+    for e in list_place_occupied:
 
-        if board._grid[e[0]][e[1]].left_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e[0]*n_cols+e[1]-1])))
+        if puzzle.board[e//n_cols,e%n_cols].right_occu == False:
+            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e+1])))
 
-        if board._grid[e[0]][e[1]].up_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([(e[0]-1)*n_cols+e[1]])))
+        if puzzle.board[e//n_cols,e%n_cols].left_occu == False:
+            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e-1])))
 
-        if board._grid[e[0]][e[1]].down_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([(e[0]+1)*n_cols+e[1]])))
+        if puzzle.board[e//n_cols,e%n_cols].up_occu == False:
+            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e-n_cols])))
+
+        if puzzle.board[e//n_cols,e%n_cols].down_occu == False:
+            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e+n_cols])))
 
 
     return list_number_position_to_place
 
 
-def find_best_one_piece_to_one_place(board,n_row,n_column,position_number,puzzle,in_space_list):
-    row = position_number//n_column
-    column = position_number % n_column
+def find_in_board_pieces(puzzle):
+    list_in_board_pieces = []
+    for i in np.arange(puzzle.board.shape[0]):
+        for j in np.arange(puzzle.board.shape[1]):
+            if isinstance(puzzle.board[i,j],Piece):
+                list_in_board_pieces.append(i*puzzle.board.shape[0]+j)
+    return list_in_board_pieces
+
+def find_not_in_board_pieces(puzzle):
+
+    return list(set(list(range(puzzle.board.shape[0]*puzzle.board.shape[1]))).difference(set(find_in_board_pieces(puzzle))))
+
+
+
+def find_best_one_piece_to_one_place(puzzle,position_number,Matrix):
+    row = position_number//puzzle.board.shape[0]
+    column = position_number % puzzle.board.shape[1]
     diss_value = []
     diss_value_list = []
-    not_in_space_list = list(set(list(range(n_row*n_column))).difference(set(in_space_list)))
-    n_average=0
-    for e in not_in_space_list:
-        if column != (n_column-1):
-            if board[row][column+1] is not None:
+    list_place_occupied = find_place_occupied(puzzle)
+    not_in_board_pieces_list = find_not_in_board_pieces(puzzle)
+
+    n_rows, n_cols = puzzle.board.shape
+#     print(not_in_space_list)
+
+    for e in not_in_board_pieces_list:
+        n_average = 0
+        if column != (n_cols-1):
+            if isinstance(puzzle.board[row,column+1],Piece):
                 n_average=n_average+1
-                diss_value = puzzle.get_piece(e).diss(board[row][column+1])['R']
+                diss_value = Matrix['L'][e,puzzle.board[row,column+1].number]
+
         if column != 0:
-            if board[row][column-1] is not None:
+            if isinstance(puzzle.board[row,column-1],Piece):
                 n_average = n_average + 1
-                diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column-1])['L']
-        if row !=  n_row-1:
-            if board[row+1][column] is not None:
+                diss_value = Matrix['R'][e,puzzle.board[row,column-1].number]
+        if row !=  n_rows-1:
+            if isinstance(puzzle.board[row+1,column],Piece):
                 n_average = n_average + 1
-                diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['B']
+                diss_value = Matrix['U'][e,puzzle.board[row+1,column].number]
         if row != 0:
-            if board[row-1][column] is not None:
+            if isinstance(puzzle.board[row-1,column],Piece):
                 n_average = n_average + 1
-                diss_value = diss_value + puzzle.get_piece(e).diss(board[row][column])['U']
+                diss_value = Matrix['B'][e,puzzle.board[row-1,column].number]
 
         diss_value_list.append(diss_value/n_average)
 
-    return not_in_space_list[diss_value_list.index(min(diss_value_list))], min(diss_value_list)
+    return not_in_board_pieces_list[diss_value_list.index(max(diss_value_list))], max(diss_value_list),n_average
 
-# def decide_piece_to_add():
-#
-#
-#     return
+def decide_piece_to_add(puzzle, list_number_position_to_place, Matrix):
+    list_prepare_to_add=[]
+    for e in list_number_position_to_place:
+
+        list_prepare_to_add.append(find_best_one_piece_to_one_place(puzzle,e, Matrix))
+
+    print((list_prepare_to_add))
+    print('numer:',list_number_position_to_place)
+
+    list_compatibilities_to_add = [e[1] for e in list_prepare_to_add]
+
+    #return position number, compatibility, piece number
+    return  list_number_position_to_place[list_compatibilities_to_add.index(max(list_compatibilities_to_add))], \
+            max(list_compatibilities_to_add), \
+            find_best_one_piece_to_one_place(puzzle,list_number_position_to_place[list_compatibilities_to_add.index(max(list_compatibilities_to_add))], Matrix)[0]
+
 
 
 

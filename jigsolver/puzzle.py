@@ -4,7 +4,7 @@ from copy import copy, deepcopy
 from skimage import io, color
 
 class Board():
-    def __init__(self, n_rows, n_cols, patch_size):
+    def __init__(self, n_rows, n_cols, patch_size=100):
         self._grid = [[Slot(patch_size) for j in range(n_cols)] for i in range(n_rows)]
 
     def __getitem__(self, coords):
