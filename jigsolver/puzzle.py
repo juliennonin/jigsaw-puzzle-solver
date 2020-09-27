@@ -49,10 +49,10 @@ class Board():
             yield self[i, j-1]
 
 
-
 class Slot():
     def __init__(self, patch_size):
         self.patch_size = patch_size
+        self.available = False
 
     @property
     def picture(self):

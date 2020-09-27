@@ -14,26 +14,11 @@ def find_place_occupied(puzzle):
         if isinstance(elmt, Piece))
 
 def position_to_place(puzzle):
-    n_rows, n_cols = puzzle.board.shape
-    list_number_position_to_place=[]
-
-    for (i,j) in find_place_occupied(puzzle):
-
-        if puzzle.board[i,j].right_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e+1])))
-
-        if puzzle.board[i,j].left_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e-1])))
-
-        if puzzle.board[i,j].up_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e-n_cols])))
-
-        if puzzle.board[i,j].down_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e+n_cols])))
-
-
-    return list_number_position_to_place
-
+    """Return a generator that yields the coordinates of "available" place"""
+    return (
+        (i, j) for (i,j), elmt in puzzle.board.enumerate()
+        if isinstance(elmt, Slot) and elmt.available
+    )
 
 def find_in_board_pieces(puzzle):
     return filter(lambda piece: piece.is_placed, puzzle.bag_of_pieces)
@@ -94,49 +79,17 @@ def decide_piece_to_add(puzzle, list_number_position_to_place, Matrix):
             max(list_compatibilities_to_add), \
             find_best_one_piece_to_one_place(puzzle,list_number_position_to_place[list_compatibilities_to_add.index(max(list_compatibilities_to_add))], Matrix)[0]
 
-def place_piece_to_position(puzzle,position_number,piece_nunmber):
-    row = position_number//puzzle.board.shape[0]
-    column = position_number % puzzle.board.shape[1]
-
-    puzzle.board[row,column] = puzzle.get_piece(piece_nunmber)
-
-    if row == 0:
-        puzzle.board[row,column].up_occu = True
-
-    elif isinstance(puzzle.board[row-1,column],Piece):
-        puzzle.board[row-1,column].down_occu = True
-        puzzle.board[row, column].up_occu = True
-
-    if column == 0:
-        puzzle.board[row,column].left_occu = True
-
-    elif isinstance(puzzle.board[row, column-1], Piece):
-        puzzle.board[row, column-1].right_occu = True
-        puzzle.board[row, column].left_occu = True
-
-    if row == puzzle.shape[0]-1:
-        puzzle.board[row,column].down_occu = True
-
-    elif isinstance(puzzle.board[row+1, column], Piece):
-        puzzle.board[row+1, column].up_occu = True
-        puzzle.board[row, column].down_occu = True
-
-    if column == puzzle.shape[1]-1:
-        puzzle.board[row,column].right_occu = True
-
-        print('test1')
-
-    elif isinstance(puzzle.board[row, column+1], Piece):
-        puzzle.board[row, column+1].left_occu = True
-        puzzle.board[row, column].right_occu = True
 
 
-
-
+def place_piece_to_position(puzzle,piece,coords):
+    """Places a piece at the given coordinates
+        * set _is_placed to True
+        * make the neighboring slots available
+    """
+    i, j = coords
+    puzzle.board[i,j] = piece
+    piece._is_placed = True
+    for slot in puzzle.board.neighbor(i, j):
+        if isinstance(slot, Slot):
+            slot.available = True
     return puzzle
-
-
-
-
-
-
