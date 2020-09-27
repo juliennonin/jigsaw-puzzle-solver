@@ -45,7 +45,7 @@ print(eiffel_unsolved.board[0,0].left_occu)
 
 print(find_in_board_pieces(eiffel_unsolved))
 print(find_not_in_board_pieces(eiffel_unsolved))
-# print(find_best_one_piece_to_one_place(eiffel_unsolved,1))
+print(find_best_one_piece_to_one_place(eiffel_unsolved,1,Matrix))
 
 # n_row = eiffel_puzzle.shape[0]
 # n_column = eiffel_puzzle.shape[1]
