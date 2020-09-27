@@ -137,9 +137,6 @@ def place_piece_to_position(puzzle,position_number,piece_nunmber):
         puzzle.board[row, column+1].left_occu = True
         puzzle.board[row, column].right_occu = True
 
-
-
-
     return puzzle
 
 
