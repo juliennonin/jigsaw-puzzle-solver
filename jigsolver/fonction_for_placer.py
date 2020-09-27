@@ -4,32 +4,31 @@ from copy import copy
 import matplotlib.pyplot as plt
 
 def find_place_occupied(puzzle):
-    list_place_occupied=[]
-    n_rows, n_cols = puzzle.board.shape
-    for i in np.arange(n_rows):
-        for j in np.arange(n_cols):
-            if isinstance(puzzle.board.__getitem__([i,j]),Piece):
-                list_place_occupied.append(i*puzzle.board.shape[1]+j)
-
-    return list_place_occupied
+    """Return a generator that yields the coordinates of pieces placed on the board
+    
+    (The placed pieces and their coordinanted can be stored and updated
+    in an attribute of board or puzzle instead)
+    """
+    return (
+        (i, j) for (i,j), elmt in puzzle.board.enumerate()
+        if isinstance(elmt, Piece))
 
 def position_to_place(puzzle):
     n_rows, n_cols = puzzle.board.shape
-    list_place_occupied = find_place_occupied(puzzle)
     list_number_position_to_place=[]
 
-    for e in list_place_occupied:
+    for (i,j) in find_place_occupied(puzzle):
 
-        if puzzle.board[e//n_cols,e%n_cols].right_occu == False:
+        if puzzle.board[i,j].right_occu == False:
             list_number_position_to_place = list(set(list_number_position_to_place).union(set([e+1])))
 
-        if puzzle.board[e//n_cols,e%n_cols].left_occu == False:
+        if puzzle.board[i,j].left_occu == False:
             list_number_position_to_place = list(set(list_number_position_to_place).union(set([e-1])))
 
-        if puzzle.board[e//n_cols,e%n_cols].up_occu == False:
+        if puzzle.board[i,j].up_occu == False:
             list_number_position_to_place = list(set(list_number_position_to_place).union(set([e-n_cols])))
 
-        if puzzle.board[e//n_cols,e%n_cols].down_occu == False:
+        if puzzle.board[i,j].down_occu == False:
             list_number_position_to_place = list(set(list_number_position_to_place).union(set([e+n_cols])))
 
 
@@ -37,17 +36,11 @@ def position_to_place(puzzle):
 
 
 def find_in_board_pieces(puzzle):
-    list_in_board_pieces = []
-    for i in np.arange(puzzle.board.shape[0]):
-        for j in np.arange(puzzle.board.shape[1]):
-            if isinstance(puzzle.board[i,j],Piece):
-                list_in_board_pieces.append(i*puzzle.board.shape[0]+j)
-    return list_in_board_pieces
+    return filter(lambda piece: piece.is_placed, puzzle.bag_of_pieces)
 
 def find_not_in_board_pieces(puzzle):
-
-    return list(set(list(range(puzzle.board.shape[0]*puzzle.board.shape[1]))).difference(set(find_in_board_pieces(puzzle))))
-
+    ## [OR] return [piece for piece in puzzle.bag_of_pieces if not piece.is_placed]
+    return filter(lambda piece: not piece.is_placed, puzzle.bag_of_pieces)
 
 
 def find_best_one_piece_to_one_place(puzzle,position_number,Matrix):
@@ -55,7 +48,7 @@ def find_best_one_piece_to_one_place(puzzle,position_number,Matrix):
     column = position_number % puzzle.board.shape[1]
     diss_value = []
     diss_value_list = []
-    list_place_occupied = find_place_occupied(puzzle)
+    # list_place_occupied = find_place_occupied(puzzle)
     not_in_board_pieces_list = find_not_in_board_pieces(puzzle)
 
     n_rows, n_cols = puzzle.board.shape

@@ -13,18 +13,22 @@ class Board():
 
     def __setitem__(self, coords, piece):
         i, j = coords
-        if isinstance(piece, Piece):
-            if isinstance(self._grid[i][j], Piece):
-                raise IndexError("A piece is already placed here.")
-            self._grid[i][j] = piece
-            piece._is_placed = True
-        else:
-            raise AttributeError("set value must be an instance of Piece")
+        assert isinstance(piece, Piece), "set value must be an instance of Piece"
+        
+        if isinstance(self._grid[i][j], Piece):
+            raise IndexError("A piece is already placed here.")
+        self._grid[i][j] = piece
+        piece._is_placed = True
 
     def __iter__(self):
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
                 yield self._grid[i][j]
+
+    def enumerate(self):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                yield (i, j), self._grid[i][j]
 
     @property
     def shape(self):
@@ -43,6 +47,7 @@ class Board():
         #left
         if j > 0:
             yield self[i, j-1]
+
 
 
 class Slot():
@@ -72,6 +77,10 @@ class Piece():
         self.down_occu = False
         self.in_space = False
         self.number = 0
+
+    @property
+    def is_placed(self):
+        return self._is_placed
 
     @property
     def size(self):
