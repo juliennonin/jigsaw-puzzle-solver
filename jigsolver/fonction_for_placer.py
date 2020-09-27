@@ -101,6 +101,48 @@ def decide_piece_to_add(puzzle, list_number_position_to_place, Matrix):
             max(list_compatibilities_to_add), \
             find_best_one_piece_to_one_place(puzzle,list_number_position_to_place[list_compatibilities_to_add.index(max(list_compatibilities_to_add))], Matrix)[0]
 
+def place_piece_to_position(puzzle,position_number,piece_nunmber):
+    row = position_number//puzzle.board.shape[0]
+    column = position_number % puzzle.board.shape[1]
+
+    puzzle.board[row,column] = puzzle.get_piece(piece_nunmber)
+
+    if row == 0:
+        puzzle.board[row,column].up_occu = True
+
+    elif isinstance(puzzle.board[row-1,column],Piece):
+        puzzle.board[row-1,column].down_occu = True
+        puzzle.board[row, column].up_occu = True
+
+    if column == 0:
+        puzzle.board[row,column].left_occu = True
+
+    elif isinstance(puzzle.board[row, column-1], Piece):
+        puzzle.board[row, column-1].right_occu = True
+        puzzle.board[row, column].left_occu = True
+
+    if row == puzzle.shape[0]-1:
+        puzzle.board[row,column].down_occu = True
+
+    elif isinstance(puzzle.board[row+1, column], Piece):
+        puzzle.board[row+1, column].up_occu = True
+        puzzle.board[row, column].down_occu = True
+
+    if column == puzzle.shape[1]-1:
+        puzzle.board[row,column].right_occu = True
+
+        print('test1')
+
+    elif isinstance(puzzle.board[row, column+1], Piece):
+        puzzle.board[row, column+1].left_occu = True
+        puzzle.board[row, column].right_occu = True
+
+
+
+
+    return puzzle
+
+
 
 
 
