@@ -169,8 +169,8 @@ class Puzzle():
         plt.imshow(puzzle_plot)
         plt.show()
 
-    def set_CM(self):
-        "set the compatibility matrix associated to our current puzzle"
+    def set_CM_Cho(self):
+        "set the compatibility matrix associated to our current puzzle - Cho paper"
 
         assert self.bag_of_pieces, "A puzzle should be created"
 

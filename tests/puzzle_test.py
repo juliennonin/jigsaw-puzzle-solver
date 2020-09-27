@@ -48,7 +48,7 @@ class PuzzleTestCase(unittest.TestCase):
         self.assertNotEqual(self.eiffel_puzzle.bag_of_pieces,self.eiffel_puzzle_copy.bag_of_pieces)
         self.assertNotEqual(self.eiffel_puzzle.board,self.eiffel_puzzle_copy.board)
 
-    def test_piece_compatibility_matrix(self):
+    def test_piece_compatibility_matrix_cho(self):
             P = Puzzle(patch_size=2)
 
             # creating very simple pieces
@@ -65,7 +65,32 @@ class PuzzleTestCase(unittest.TestCase):
 
             P.bag_of_pieces = [A, B]
 
-            P.set_CM()
+            P.set_CM_Cho()
+
+            #these two pieces should have a perfect compatibility for one side
+            # (left of right depending of the piece considered as a reference)
+
+            self.assertEqual((P.CM)[0,1]['L'],1)
+            self.assertEqual((P.CM)[1,0]['R'], 1)
+
+    def test_piece_compatibility_matrix_pomeranz(self):
+            P = Puzzle(patch_size=2)
+
+            # creating very simple pieces
+            A = np.zeros((2, 2, 3)).astype(int)
+            B = A.copy()
+
+            A[:, 0] = 1
+            A[:, 1] = 2
+            A = Piece(A)
+
+            B[:, 0] = 5
+            B[:, 1] = 1
+            B = Piece(B)
+
+            P.bag_of_pieces = [A, B]
+
+            P.set_CM_Pomeranz()
 
             #these two pieces should have a perfect compatibility for one side
             # (left of right depending of the piece considered as a reference)
