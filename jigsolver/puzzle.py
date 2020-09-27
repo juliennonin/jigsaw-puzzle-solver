@@ -204,37 +204,37 @@ class Puzzle():
                 self.bag_of_pieces[i].down_occu = True
 
 
-    def place_piece_to_position(self,position,number_piece_to_place,side,number_piece_near):
-        self.board_space[position[0]][position[1]] = self.get_piece(number_piece_to_place)
-        self.set_piece_in_space(number_piece_to_place,position)
-
-        if position[0] == 0:
-            self.set_up_side_occupied(number_piece_to_place)
-
-        if position[1] == 0:
-            self.set_left_side_occupied(number_piece_to_place)
-
-        if position[0] == self.shape[0]-1:
-            self.set_down_side_occupied(number_piece_to_place)
-
-        if position[1] == self.shape[1]-1:
-            self.set_right_side_occupied(number_piece_to_place)
-
-        for i in np.arange(len(number_piece_near)):
-
-            if side[i] == 'right':
-                self.set_right_side_occupied(number_piece_near[i])
-            elif side[i] == 'left':
-                self.set_left_side_occupied(number_piece_near[i])
-
-            elif side[i] == 'up':
-                self.set_up_side_occupied(number_piece_near[i])
-
-            elif side[i] == 'down':
-                self.set_down_side_occupied(number_piece_near[i])
-
-            else:
-                return "error to place"
+    # def place_piece_to_position(self,position,number_piece_to_place,side,number_piece_near):
+    #     self.board_space[position[0]][position[1]] = self.get_piece(number_piece_to_place)
+    #     self.set_piece_in_space(number_piece_to_place,position)
+    #
+    #     if position[0] == 0:
+    #         self.set_up_side_occupied(number_piece_to_place)
+    #
+    #     if position[1] == 0:
+    #         self.set_left_side_occupied(number_piece_to_place)
+    #
+    #     if position[0] == self.shape[0]-1:
+    #         self.set_down_side_occupied(number_piece_to_place)
+    #
+    #     if position[1] == self.shape[1]-1:
+    #         self.set_right_side_occupied(number_piece_to_place)
+    #
+    #     for i in np.arange(len(number_piece_near)):
+    #
+    #         if side[i] == 'right':
+    #             self.set_right_side_occupied(number_piece_near[i])
+    #         elif side[i] == 'left':
+    #             self.set_left_side_occupied(number_piece_near[i])
+    #
+    #         elif side[i] == 'up':
+    #             self.set_up_side_occupied(number_piece_near[i])
+    #
+    #         elif side[i] == 'down':
+    #             self.set_down_side_occupied(number_piece_near[i])
+    #
+    #         else:
+    #             return "error to place"
 
 
     def display(self, show_borders=True):
