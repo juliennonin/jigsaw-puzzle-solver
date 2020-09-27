@@ -75,20 +75,32 @@ def find_best_one_piece_to_one_place(puzzle,position_number,Matrix):
         if row !=  n_rows-1:
             if isinstance(puzzle.board[row+1,column],Piece):
                 n_average = n_average + 1
-                diss_value = Matrix['B'][e,puzzle.board[row+1,column].number]
+                diss_value = Matrix['U'][e,puzzle.board[row+1,column].number]
         if row != 0:
             if isinstance(puzzle.board[row-1,column],Piece):
                 n_average = n_average + 1
-                diss_value = Matrix['U'][e,puzzle.board[row-1,column].number]
+                diss_value = Matrix['B'][e,puzzle.board[row-1,column].number]
 
         diss_value_list.append(diss_value/n_average)
 
     return not_in_board_pieces_list[diss_value_list.index(max(diss_value_list))], max(diss_value_list),n_average
 
-# def decide_piece_to_add():
-#
-#
-#     return
+def decide_piece_to_add(puzzle, list_number_position_to_place, Matrix):
+    list_prepare_to_add=[]
+    for e in list_number_position_to_place:
+
+        list_prepare_to_add.append(find_best_one_piece_to_one_place(puzzle,e, Matrix))
+
+    print((list_prepare_to_add))
+    print('numer:',list_number_position_to_place)
+
+    list_compatibilities_to_add = [e[1] for e in list_prepare_to_add]
+
+    #return position number, compatibility, piece number
+    return  list_number_position_to_place[list_compatibilities_to_add.index(max(list_compatibilities_to_add))], \
+            max(list_compatibilities_to_add), \
+            find_best_one_piece_to_one_place(puzzle,list_number_position_to_place[list_compatibilities_to_add.index(max(list_compatibilities_to_add))], Matrix)[0]
+
 
 
 

@@ -47,6 +47,8 @@ print(find_in_board_pieces(eiffel_unsolved))
 print(find_not_in_board_pieces(eiffel_unsolved))
 print(find_best_one_piece_to_one_place(eiffel_unsolved,1,Matrix))
 
+list_number_position_to_place = position_to_place(eiffel_unsolved)
+print(decide_piece_to_add(eiffel_unsolved, list_number_position_to_place, Matrix))
 # n_row = eiffel_puzzle.shape[0]
 # n_column = eiffel_puzzle.shape[1]
 #
@@ -57,7 +59,9 @@ print(find_best_one_piece_to_one_place(eiffel_unsolved,1,Matrix))
 # test._grid[0][0].left_occu = True
 # test._grid[0][0].up_occu = True
 
+a=[(1,2),(3,1)]
 
+print(max([e[0] for e in a]))
 #
 #
 # print(position_to_place(test))
