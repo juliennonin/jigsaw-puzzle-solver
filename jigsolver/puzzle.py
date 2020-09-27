@@ -11,12 +11,15 @@ class Board():
         i, j = coords
         return self._grid[i][j]
 
-    def __setitem__(self, coords, value):
+    def __setitem__(self, coords, piece):
         i, j = coords
-        if isinstance(value, Slot) or isinstance(value, Piece):
-            self._grid[i][j] = value
+        if isinstance(piece, Piece):
+            if isinstance(self._grid[i][j], Piece):
+                raise IndexError("A piece is already placed here.")
+            self._grid[i][j] = piece
+            piece._is_placed = True
         else:
-            raise AttributeError("value must be an instance of Slot or Piece")
+            raise AttributeError("set value must be an instance of Piece")
 
     def __iter__(self):
         for i in range(self.shape[0]):
@@ -53,13 +56,16 @@ class Slot():
 
 
 class Piece():
-    def __init__(self, picture):
+    def __init__(self, picture, id):
         picture = np.array(picture, dtype=int)
         assert picture.ndim == 3, "The picture must be 3-dimensional, i.e. of shape (n,n,3)"
         assert picture.shape[2] == 3, "Each pixel of the picture must have 3 color values"
         assert picture.shape[0] == picture.shape[1], "The image must not be rectangular but squared in shape"
 
+        self._id = id
         self.picture = picture
+        self._is_placed = False
+
         self.right_occu = False
         self.left_occu = False
         self.up_occu = False
@@ -109,9 +115,10 @@ class Piece():
 
         return dict
 
-    def __eq__(self, otherPiece):
-        return np.allclose(Piece.picture,otherPiece.picture)
-
+    def __eq__(self, other):
+        if isinstance(other, Piece):
+            return np.allclose(self.picture, other.picture)
+        return False
 
 
 
@@ -143,7 +150,9 @@ class Puzzle():
         self.board = Board(n_rows, n_columns, ps)
         for i in range(n_rows):
             for j in range(n_columns):
-                self.board[i,j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+                piece = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps], i * n_columns + j)
+                self.bag_of_pieces.append(piece)
+                self.board[i,j] = piece
         return self
 
 
@@ -151,16 +160,14 @@ class Puzzle():
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
-        for i in range(n_rows):
-            for j in range(n_colums):
-                self.bag_of_pieces.append(self.board[i, j])
-                if self.board[i][j] != None :
-                    self.bag_of_pieces[-1].set_number(7*i+j)
         self.board = Board(n_rows, n_colums, self.patch_size)
         np.random.shuffle(self.bag_of_pieces)
+        for i, piece in enumerate(self.bag_of_pieces):
+            piece._is_placed = False
+            piece._id = i
 
-    def get_piece(self,number):
-        return [e for e in filter(lambda x: x.number == number, self.bag_of_pieces)][0]
+    # def get_piece(self,number): --> Puzzle.bag_of_pieces[number]
+    #     return [e for e in filter(lambda x: x.number == number, self.bag_of_pieces)][0]
 
     def set_piece_in_space(self,number):
         for i in np.arange(len(self.bag_of_pieces)):
