@@ -6,8 +6,7 @@ from skimage import io, color
 class Board():
     def __init__(self, n_rows, n_cols, patch_size=100):
         self._grid = [[Slot(patch_size) for j in range(n_cols)] for i in range(n_rows)]
-        self.n_rows = n_rows
-        self.n_cols = n_cols
+
     def __getitem__(self, coords):
         i, j = coords
         return self._grid[i][j]
@@ -156,7 +155,7 @@ class Puzzle():
             for j in range(n_colums):
                 self.bag_of_pieces.append(self.board[i,j])
                 if self.board[i,j] is not None :
-                    self.bag_of_pieces[-1].set_number(7*i+j)
+                    self.bag_of_pieces[-1].set_number(self.board.shape[1]*i+j)
         self.board = Board(n_rows, n_colums, self.patch_size)
         np.random.shuffle(self.bag_of_pieces)
 

@@ -3,31 +3,33 @@ import numpy as np
 from copy import copy
 import matplotlib.pyplot as plt
 
-def find_place_occupied(board):
+def find_place_occupied(puzzle):
     list_occupied=[]
-    for i in np.arange(board.n_rows):
-        for j in np.arange(board.n_cols):
-            if isinstance(board.__getitem__([i,j]),Piece):
+    n_rows, n_cols = puzzle.board.shape
+    for i in np.arange(n_rows):
+        for j in np.arange(n_cols):
+            if isinstance(puzzle.board.__getitem__([i,j]),Piece):
                 list_occupied.append([i,j])
 
     return list_occupied
 
-def position_to_place(board):
-    list_occupied = find_place_occupied(board)
+def position_to_place(puzzle):
+    n_rows, n_cols = puzzle.board.shape
+    list_occupied = find_place_occupied(puzzle)
     list_number_position_to_place=[]
     for e in list_occupied:
 
-        if board._grid[e[0]][e[1]].right_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e[0]*board.n_cols+e[1]+1])))
+        if puzzle.board[e[0],e[1]].right_occu == False:
+            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e[0]*n_cols+e[1]+1])))
 
-        if board._grid[e[0]][e[1]].left_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e[0]*board.n_cols+e[1]-1])))
+        if puzzle.board[e[0],e[1]].left_occu == False:
+            list_number_position_to_place = list(set(list_number_position_to_place).union(set([e[0]*n_cols+e[1]-1])))
 
-        if board._grid[e[0]][e[1]].up_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([(e[0]-1)*board.n_cols+e[1]])))
+        if puzzle.board[e[0],e[1]].up_occu == False:
+            list_number_position_to_place = list(set(list_number_position_to_place).union(set([(e[0]-1)*n_cols+e[1]])))
 
-        if board._grid[e[0]][e[1]].down_occu == False:
-            list_number_position_to_place = list(set(list_number_position_to_place).union(set([(e[0]+1)*board.n_cols+e[1]])))
+        if puzzle.board[e[0],e[1]].down_occu == False:
+            list_number_position_to_place = list(set(list_number_position_to_place).union(set([(e[0]+1)*n_cols+e[1]])))
 
 
     return list_number_position_to_place
