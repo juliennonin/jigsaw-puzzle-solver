@@ -91,7 +91,7 @@ class PuzzleTestCase(unittest.TestCase):
             P.bag_of_pieces = [A, B]
 
             P.set_CM_Pomeranz()
-
+         
             #these two pieces should have a perfect compatibility for one side
             # (left of right depending of the piece considered as a reference)
 

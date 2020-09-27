@@ -87,22 +87,25 @@ class Piece():
     def lab_to_rgb(self):
         return color.lab2rgb(self.picture)
 
-    def diss(self,otherPiece,lab_space=False):
+
+    def diss(self,otherPiece,p=2,q=2,lab_space=False):
         '''Return the dissimilarities between the current Piece and the otherPiece for the four sides'''
 
         currentPiece=self.rgb_to_lab() if lab_space else self
 
         dict={}
-        dict['L']=np.sum(np.power((otherPiece.right-currentPiece.left),2))
-        dict['R']=np.sum(np.power((currentPiece.right-otherPiece.left),2))
-        dict['U']=np.sum(np.power((otherPiece.bottom-currentPiece.up),2))
-        dict['B'] = np.sum(np.power((currentPiece.bottom - otherPiece.up), 2))
+        dict['L']=np.power(np.sum(np.power((otherPiece.right-currentPiece.left),p)),q/p)
+        dict['R']=np.power(np.sum(np.power((currentPiece.right-otherPiece.left),p)),q/p)
+        dict['U']=np.power(np.sum(np.power((otherPiece.bottom-currentPiece.up),p)),q/p)
+        dict['B']=np.power(np.sum(np.power((currentPiece.bottom - otherPiece.up), p)),q/p)
 
         return dict
 
     def __eq__(self, otherPiece):
         return np.allclose(self.picture,otherPiece.picture)
 
+    # def __repr__(self):
+    #     return f'Piece({self.position})'
 
 
 
@@ -198,9 +201,9 @@ class Puzzle():
 
             #kind of standard deviation - handling of the case where there are only two pieces
             try:
-                sigma=Values[1]-Values[0]
+                sigma=(Values[1]-Values[0]) if (Values[1]-Values[0]!=0) else 1
             except:
-                sigma=Values[0]
+                sigma=Values[0] if (Values[0]!=0) else 1
 
             #Normalization
             for diss in CM[-1]:
@@ -209,6 +212,51 @@ class Puzzle():
 
             self.CM=np.array(CM)
 
+
+    def set_CM_Pomeranz(self,p=2,q=2):
+        "set the compatibility matrix associated to our current puzzle - Cho paper"
+
+        assert self.bag_of_pieces, "A puzzle should be created"
+
+        CM=[]
+
+        #function enabling to jump from dissimilarities into probabilities
+        h = lambda x,quartile: np.round(np.exp(-x /quartile))
+
+        for i,Piece in enumerate(self.bag_of_pieces):
+
+            #We need to obtain the dissimilarities between the current
+            #Piece and all the others Piece.
+            f=lambda otherPiece: Piece.diss(otherPiece,p=p,q=q)
+
+            left=lambda otherPiece: f(otherPiece)['L']
+            right=lambda otherPiece : f(otherPiece)['R']
+            up=lambda otherPiece : f(otherPiece)['U']
+            bottom=lambda otherPiece : f(otherPiece)['B']
+
+            CM.append([f(otherPiece) for otherPiece in self.bag_of_pieces])
+
+            # **Normalization of dissimilarities (suggested by the Cho Paper)**
+
+            #We don't count the current piece for the normalization
+            Left = list(map(left,filter(lambda x: x!=Piece,self.bag_of_pieces)))
+            Right = list((map(right, filter(lambda x: x != Piece, self.bag_of_pieces))))
+            Up = list((map(up, filter(lambda x: x != Piece, self.bag_of_pieces))))
+            Bottom = list((map(bottom, filter(lambda x: x != Piece, self.bag_of_pieces))))
+
+            #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
+            quartiles={}
+            quartiles['L']=np.quantile(Left,q=0.25) if np.quantile(Left,q=0.25)!=0 else 1
+            quartiles['R']=np.quantile(Right, q=0.25) if np.quantile(Right,q=0.25)!=0 else 1
+            quartiles['U']=np.quantile(Up, q=0.25) if np.quantile(Up,q=0.25)!=0 else 1
+            quartiles['B']=np.quantile(Bottom,q=0.25) if np.quantile(Bottom,q=0.25)!=0 else 1
+
+            #Normalization
+            for diss in CM[-1]:
+                for key in diss.keys():
+                    diss[key]=h(diss[key],quartiles[key])
+
+        self.CM=np.array(CM)
 
     def __copy__(self):
         new_puzzle = Puzzle(self.patch_size)
