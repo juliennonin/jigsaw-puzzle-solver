@@ -107,7 +107,7 @@ class Piece():
         return diss
 
     def __eq__(self, otherPiece):
-        return np.allclose(Piece.picture,otherPiece.picture)
+        return np.allclose(self.picture,otherPiece.picture)
 
 
 
@@ -175,35 +175,45 @@ class Puzzle():
         plt.imshow(puzzle_plot)
         plt.show()
 
-    def get_compatibilities(self):
-        "Return the compatibility matrix associated to our current puzzle"
+    def set_CM(self):
+        "set the compatibility matrix associated to our current puzzle"
 
         assert self.bag_of_pieces, "A puzzle should be created"
 
         CM=[]
 
+        #function enabling to jump from dissimilarities into probabilities
+        h = lambda x,sigma: np.round(np.exp(-x / (2 * (sigma ** 2))),2)
+
         for i,Piece in enumerate(self.bag_of_pieces):
 
-            bag_of_pieces=self.bag_of_pieces.copy()
-
+            #We need to obtain the dissimilarities between the current
+            #Piece and all the others Piece.
             f=lambda otherPiece: Piece.diss(otherPiece)
-            g=lambda otherPiece: list(Piece.diss(otherPiece).values())
+            g=lambda otherPiece: list(f(otherPiece).values())
 
-            CM.append([f(otherPiece) for otherPiece in bag_of_pieces])
+            CM.append([f(otherPiece) for otherPiece in self.bag_of_pieces])
+
+            # **Normalization of dissimilarities (suggested by the Cho Paper)**
 
             #We don't count the current piece for the normalization
-            del bag_of_pieces[i]
-            Values = np.sort(list(map(g,bag_of_pieces))).reshape(-1)
+            Values = list((map(g,filter(lambda x: x!=Piece,self.bag_of_pieces))))
 
-            sigma=Values[1]-Values[0]
-            h = lambda x: np.exp(-x/ (2 * (sigma ** 2)))
+            #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
+            Values=np.sort(np.array(Values).reshape(-1))
+
+            #kind of standard deviation - handling of the case where there are only two pieces
+            try:
+                sigma=Values[1]-Values[0]
+            except:
+                sigma=Values[0]
 
             #Normalization
             for diss in CM[-1]:
-                diss = {k:h(v) for k, v in diss.items()}
+                for key in diss.keys():
+                    diss[key]=h(diss[key],sigma)
 
-
-        return np.array(CM)
+            self.CM=np.array(CM)
 
 
     def __copy__(self):
