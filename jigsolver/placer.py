@@ -5,8 +5,12 @@ import matplotlib.pyplot as plt
 
 
 def naiv_greedy_placer(puzzle, compatibilities, display=False):
-    n_pieces = len(puzzle.pieces_placed)
-    for _ in range(n_pieces):
+    n_pieces = len(list(puzzle.pieces_remaining))
+    n_rows, n_cols = puzzle.shape
+    puzzle.place(puzzle.bag_of_pieces[0], (n_rows//2, n_cols//2))
+    if display:
+        puzzle.display()
+    for _ in range(n_pieces - 1):
         position, piece = decide_piece_to_add(puzzle, compatibilities)
         puzzle.place(piece, position)
         if display:
@@ -14,17 +18,18 @@ def naiv_greedy_placer(puzzle, compatibilities, display=False):
 
 
 def decide_piece_to_add(puzzle, compatibilities):
+    positions = list(available_positions(puzzle))
+    assert len(positions) != 0, "No empty slot left!"
     best_value = 0
     best_position = None
     best_piece = None
-
-    for slot_coord in available_positions(puzzle):
+    for slot_coord in positions:
         piece, value = find_best_piece_for_slot(puzzle,slot_coord,compatibilities)
         if value > best_value:
             best_value = value
             best_position = slot_coord
             best_piece = piece
-    return best_position, piece
+    return best_position, best_piece
 
 
 def find_best_piece_for_slot(puzzle, slot_coord, compatibilities):
@@ -35,7 +40,7 @@ def find_best_piece_for_slot(puzzle, slot_coord, compatibilities):
         diss_value = []
         for position,neigh in puzzle.board.neighbors(*slot_coord):
             if isinstance(neigh,Piece):
-                diss_value.append(compatibilities[position][piece.id, neigh.id])
+                diss_value.append(compatibilities[piece.id, neigh.id][position])
 
         diss_value_avg = (sum(diss_value) / len(diss_value))
         if diss_value_avg > best_diss_value:
