@@ -4,8 +4,6 @@ from jigsolver.segmenter import segmenter,find_segment
 import numpy as np
 from copy import copy
 
-
-
 class PuzzleTestCase(unittest.TestCase):
     def setUp(self):
         pass
@@ -26,8 +24,6 @@ class PuzzleTestCase(unittest.TestCase):
 
         segment = find_segment(bw_puzzle,[],(0,0))
         self.assertEqual(len(segment),3)
-
-
 
 
 if __name__ == '__main__':
