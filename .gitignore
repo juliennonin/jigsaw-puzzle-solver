@@ -1,6 +1,8 @@
 ### Custom ###
 perso.py
 local.py
+tests/test_placer_temporary.py
+
 ### VsCode ###
 .vscode
 .vscode/*

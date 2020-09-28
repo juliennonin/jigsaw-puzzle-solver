@@ -1,6 +1,6 @@
 import numpy as np
-from jigsolver.puzzle import Piece
-from jigsolver.fonction_for_placer import *
+from .puzzle import Piece
+
 
 def random_solver(puzzle,plotsteps=True):
     '''Solve a puzzle randomly'''
@@ -19,12 +19,3 @@ def random_solver(puzzle,plotsteps=True):
                     puzzle.plot()
 
     return
-
-def place_pieces(puzzle,matrix):
-
-
-
-    return puzzle_all_placed
-
-
-

@@ -4,7 +4,7 @@ from copy import copy, deepcopy
 from skimage import io, color
 
 class Board():
-    def __init__(self, n_rows, n_cols, patch_size=100):
+    def __init__(self, n_rows, n_cols, patch_size):
         self._grid = [[Slot(patch_size) for j in range(n_cols)] for i in range(n_rows)]
 
     def __getitem__(self, coords):
@@ -71,16 +71,10 @@ class Piece():
         self.picture = picture
         self._is_placed = False
 
-        self.right_occu = False
-        self.left_occu = False
-        self.up_occu = False
-        self.down_occu = False
-        self.in_space = False
-        self.number = 0
-
     @property
     def id(self):
         return self._id
+
     @property
     def is_placed(self):
         return self._is_placed
@@ -88,9 +82,6 @@ class Piece():
     @property
     def size(self):
         return len(self.picture)
-
-    def set_number(self, number):
-        self.number = number
 
     @property
     def right(self):
@@ -147,6 +138,14 @@ class Puzzle():
         assert self.board, "Puzzle board is empty."
         return self.board.shape
 
+    @property
+    def pieces_placed(self):
+        return filter(lambda piece: piece.is_placed, self.bag_of_pieces)
+
+    @property
+    def pieces_remaining(self):
+        return [piece for piece in self.bag_of_pieces if not piece.is_placed]
+        #≡ return filter(lambda piece: not piece.is_placed, self.bag_of_pieces)
 
     def create_from_img(self, img):
         '''Create the pieces from an img and put them in the board'''
@@ -167,8 +166,6 @@ class Puzzle():
                 self.board[i,j] = piece
         return self
 
-
-
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
@@ -178,66 +175,19 @@ class Puzzle():
             piece._is_placed = False
             piece._id = i
 
-    # def get_piece(self,number): --> Puzzle.bag_of_pieces[number]
-    #     return [e for e in filter(lambda x: x.number == number, self.bag_of_pieces)][0]
-
-    def set_piece_in_space(self,number):
-        for i in np.arange(len(self.bag_of_pieces)):
-            if number == self.bag_of_pieces[i].number:
-                self.bag_of_pieces[i].in_space = True
-
-    def set_right_side_occupied(self,number_piece):
-        for i in np.arange(len(self.bag_of_pieces)):
-            if number_piece == self.bag_of_pieces[i].number:
-                self.bag_of_pieces[i].right_occu = True
-
-    def set_left_side_occupied(self,number_piece):
-        for i in np.arange(len(self.bag_of_pieces)):
-            if number_piece == self.bag_of_pieces[i].number:
-                self.bag_of_pieces[i].left_occu = True
-
-    def set_up_side_occupied(self,number_piece):
-        for i in np.arange(len(self.bag_of_pieces)):
-            if number_piece == self.bag_of_pieces[i].number:
-                self.bag_of_pieces[i].up_occu = True
-
-    def set_down_side_occupied(self,number_piece):
-        for i in np.arange(len(self.bag_of_pieces)):
-            if number_piece == self.bag_of_pieces[i].number:
-                self.bag_of_pieces[i].down_occu = True
-
-
-    # def place_piece_to_position(self,position,number_piece_to_place,side,number_piece_near):
-    #     self.board_space[position[0]][position[1]] = self.get_piece(number_piece_to_place)
-    #     self.set_piece_in_space(number_piece_to_place,position)
-    #
-    #     if position[0] == 0:
-    #         self.set_up_side_occupied(number_piece_to_place)
-    #
-    #     if position[1] == 0:
-    #         self.set_left_side_occupied(number_piece_to_place)
-    #
-    #     if position[0] == self.shape[0]-1:
-    #         self.set_down_side_occupied(number_piece_to_place)
-    #
-    #     if position[1] == self.shape[1]-1:
-    #         self.set_right_side_occupied(number_piece_to_place)
-    #
-    #     for i in np.arange(len(number_piece_near)):
-    #
-    #         if side[i] == 'right':
-    #             self.set_right_side_occupied(number_piece_near[i])
-    #         elif side[i] == 'left':
-    #             self.set_left_side_occupied(number_piece_near[i])
-    #
-    #         elif side[i] == 'up':
-    #             self.set_up_side_occupied(number_piece_near[i])
-    #
-    #         elif side[i] == 'down':
-    #             self.set_down_side_occupied(number_piece_near[i])
-    #
-    #         else:
-    #             return "error to place"
+    
+    def place(self, piece, coords):
+        """Places a piece at the given coordinates
+            * set _is_placed to True
+            * make the neighboring slots available
+        """
+        assert isinstance(piece, Piece), "must be an instance of Piece"
+        i, j = coords
+        self.board[i,j] = piece
+        piece._is_placed = True
+        for slot in self.board.neighbors(i, j):
+            if isinstance(slot, Slot):
+                slot.available = True
 
 
     def display(self, show_borders=True):
