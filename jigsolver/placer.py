@@ -1,14 +1,16 @@
-from jigsolver.puzzle import *
+from .puzzle import *
 import numpy as np
 from copy import copy
 import matplotlib.pyplot as plt
 
 
-def naiv_greedy_placer(puzzle, compatibilities):
+def naiv_greedy_placer(puzzle, compatibilities, display=False):
     n_pieces = len(puzzle.pieces_placed)
     for _ in range(n_pieces):
         position, piece = decide_piece_to_add(puzzle, compatibilities)
         puzzle.place(piece, position)
+        if display:
+            puzzle.display()
 
 
 def decide_piece_to_add(puzzle, compatibilities):

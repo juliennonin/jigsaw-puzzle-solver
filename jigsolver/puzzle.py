@@ -61,7 +61,7 @@ class Slot():
 
 
 class Piece():
-    def __init__(self, picture, id):
+    def __init__(self, picture, id=None):
         picture = np.array(picture, dtype=int)
         assert picture.ndim == 3, "The picture must be 3-dimensional, i.e. of shape (n,n,3)"
         assert picture.shape[2] == 3, "Each pixel of the picture must have 3 color values"
@@ -181,11 +181,14 @@ class Puzzle():
             * set _is_placed to True
             * make the neighboring slots available
         """
-        assert isinstance(piece, Piece), "must be an instance of Piece"
         i, j = coords
+        assert isinstance(piece, Piece), "must be an instance of Piece."
+        assert isinstance(self.board[i, j], Slot), f"A piece is already placed at {coords}."
+        assert not piece._is_placed, "This Piece has already been placed"
+        
         self.board[i,j] = piece
         piece._is_placed = True
-        for slot in self.board.neighbors(i, j):
+        for position, slot in self.board.neighbors(i, j):
             if isinstance(slot, Slot):
                 slot.available = True
 

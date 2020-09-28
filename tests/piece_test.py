@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from jigsolver.puzzle import Piece,Puzzle
+from jigsolver import Piece, Puzzle
 
 class PieceTestCase(unittest.TestCase):
     def setUp(self):
