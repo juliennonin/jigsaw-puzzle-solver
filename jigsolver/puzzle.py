@@ -11,17 +11,24 @@ class Board():
         i, j = coords
         return self._grid[i][j]
 
-    def __setitem__(self, coords, value):
+    def __setitem__(self, coords, piece):
         i, j = coords
-        if isinstance(value, Slot) or isinstance(value, Piece):
-            self._grid[i][j] = value
-        else:
-            raise AttributeError("value must be an instance of Slot or Piece")
+        assert isinstance(piece, Piece), "set value must be an instance of Piece"
+        
+        if isinstance(self._grid[i][j], Piece):
+            raise IndexError("A piece is already placed here.")
+        self._grid[i][j] = piece
+        piece._is_placed = True
 
     def __iter__(self):
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
                 yield self._grid[i][j]
+
+    def enumerate(self):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                yield (i, j), self._grid[i][j]
 
     @property
     def shape(self):
@@ -30,21 +37,22 @@ class Board():
     def neighbors(self, i, j):
         #up
         if i > 0:
-            yield self[i-1, j]
+            yield 'U', self[i-1, j]
         #right
         if j < self.shape[1]-1:
-            yield self[i, j+1]
+            yield 'R', self[i, j+1]
         #down
         if i < self.shape[0]-1:
-            yield self[i+1, j]
+            yield 'B', self[i+1, j]
         #left
         if j > 0:
-            yield self[i, j-1]
+            yield 'L', self[i, j-1]
 
 
 class Slot():
     def __init__(self, patch_size):
         self.patch_size = patch_size
+        self.available = False
 
     @property
     def picture(self):
@@ -53,19 +61,29 @@ class Slot():
 
 
 class Piece():
-    def __init__(self, picture):
+    def __init__(self, picture, id):
         picture = np.array(picture, dtype=int)
         assert picture.ndim == 3, "The picture must be 3-dimensional, i.e. of shape (n,n,3)"
         assert picture.shape[2] == 3, "Each pixel of the picture must have 3 color values"
         assert picture.shape[0] == picture.shape[1], "The image must not be rectangular but squared in shape"
 
+        self._id = id
         self.picture = picture
+        self._is_placed = False
+
         self.right_occu = False
         self.left_occu = False
         self.up_occu = False
         self.down_occu = False
         self.in_space = False
         self.number = 0
+
+    @property
+    def id(self):
+        return self._id
+    @property
+    def is_placed(self):
+        return self._is_placed
 
     @property
     def size(self):
@@ -109,9 +127,10 @@ class Piece():
 
         return dict
 
-    def __eq__(self, otherPiece):
-        return np.allclose(Piece.picture,otherPiece.picture)
-
+    def __eq__(self, other):
+        if isinstance(other, Piece):
+            return np.allclose(self.picture, other.picture)
+        return False
 
 
 
@@ -143,7 +162,9 @@ class Puzzle():
         self.board = Board(n_rows, n_columns, ps)
         for i in range(n_rows):
             for j in range(n_columns):
-                self.board[i,j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+                piece = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps], i * n_columns + j)
+                self.bag_of_pieces.append(piece)
+                self.board[i,j] = piece
         return self
 
 
@@ -151,16 +172,14 @@ class Puzzle():
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
-        for i in range(n_rows):
-            for j in range(n_colums):
-                self.bag_of_pieces.append(self.board[i,j])
-                if self.board[i,j] is not None :
-                    self.bag_of_pieces[-1].set_number(self.board.shape[1]*i+j)
         self.board = Board(n_rows, n_colums, self.patch_size)
         np.random.shuffle(self.bag_of_pieces)
+        for i, piece in enumerate(self.bag_of_pieces):
+            piece._is_placed = False
+            piece._id = i
 
-    def get_piece(self,number):
-        return [e for e in filter(lambda x: x.number == number, self.bag_of_pieces)][0]
+    # def get_piece(self,number): --> Puzzle.bag_of_pieces[number]
+    #     return [e for e in filter(lambda x: x.number == number, self.bag_of_pieces)][0]
 
     def set_piece_in_space(self,number):
         for i in np.arange(len(self.bag_of_pieces)):
