@@ -37,16 +37,16 @@ class Board():
     def neighbors(self, i, j):
         #up
         if i > 0:
-            yield self[i-1, j]
+            yield 'U', self[i-1, j]
         #right
         if j < self.shape[1]-1:
-            yield self[i, j+1]
+            yield 'R', self[i, j+1]
         #down
         if i < self.shape[0]-1:
-            yield self[i+1, j]
+            yield 'B', self[i+1, j]
         #left
         if j > 0:
-            yield self[i, j-1]
+            yield 'L', self[i, j-1]
 
 
 class Slot():
@@ -78,6 +78,9 @@ class Piece():
         self.in_space = False
         self.number = 0
 
+    @property
+    def id(self):
+        return self._id
     @property
     def is_placed(self):
         return self._is_placed

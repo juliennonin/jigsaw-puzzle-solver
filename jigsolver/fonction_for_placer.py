@@ -24,60 +24,46 @@ def find_in_board_pieces(puzzle):
     return filter(lambda piece: piece.is_placed, puzzle.bag_of_pieces)
 
 def find_not_in_board_pieces(puzzle):
-    ## [OR] return [piece for piece in puzzle.bag_of_pieces if not piece.is_placed]
-    return filter(lambda piece: not piece.is_placed, puzzle.bag_of_pieces)
+    return [piece for piece in puzzle.bag_of_pieces if not piece.is_placed]
+    # return filter(lambda piece: not piece.is_placed, puzzle.bag_of_pieces)
 
 
-def find_best_one_piece_to_one_place(puzzle,position_number,Matrix):
-    row = position_number//puzzle.board.shape[0]
-    column = position_number % puzzle.board.shape[1]
-    diss_value = []
-    diss_value_list = []
+def find_best_one_piece_to_one_place(puzzle,slot_coord,Matrix):
+    row,column = slot_coord
+
+    best_diss_value = 0
+
     # list_place_occupied = find_place_occupied(puzzle)
     not_in_board_pieces_list = find_not_in_board_pieces(puzzle)
-
+    best_piece = not_in_board_pieces_list[0]
     n_rows, n_cols = puzzle.board.shape
 #     print(not_in_space_list)
 
-    for e in not_in_board_pieces_list:
-        n_average = 0
-        if column != (n_cols-1):
-            if isinstance(puzzle.board[row,column+1],Piece):
-                n_average=n_average+1
-                diss_value = Matrix['L'][e,puzzle.board[row,column+1].number]
+    for piece in not_in_board_pieces_list:
+        diss_value = []
+        for position,neigh in puzzle.board.neighbors(row,column):
+            if isinstance(neigh,Piece):
+                diss_value.append(Matrix[position][piece.id, neigh.id])
+        diss_value_avg = (sum(diss_value) / len(diss_value))
+        if diss_value_avg > best_diss_value:
+            best_diss_value = diss_value_avg
+            best_piece = piece
 
-        if column != 0:
-            if isinstance(puzzle.board[row,column-1],Piece):
-                n_average = n_average + 1
-                diss_value = Matrix['R'][e,puzzle.board[row,column-1].number]
-        if row !=  n_rows-1:
-            if isinstance(puzzle.board[row+1,column],Piece):
-                n_average = n_average + 1
-                diss_value = Matrix['U'][e,puzzle.board[row+1,column].number]
-        if row != 0:
-            if isinstance(puzzle.board[row-1,column],Piece):
-                n_average = n_average + 1
-                diss_value = Matrix['B'][e,puzzle.board[row-1,column].number]
+    return best_piece, best_diss_value
 
-        diss_value_list.append(diss_value/n_average)
 
-    return not_in_board_pieces_list[diss_value_list.index(max(diss_value_list))], max(diss_value_list),n_average
+def decide_piece_to_add(puzzle, Matrix):
+    best_value = 0
+    best_position = None
+    best_piece = None
 
-def decide_piece_to_add(puzzle, list_number_position_to_place, Matrix):
-    list_prepare_to_add=[]
-    for e in list_number_position_to_place:
-
-        list_prepare_to_add.append(find_best_one_piece_to_one_place(puzzle,e, Matrix))
-
-    print((list_prepare_to_add))
-    print('numer:',list_number_position_to_place)
-
-    list_compatibilities_to_add = [e[1] for e in list_prepare_to_add]
-
-    #return position number, compatibility, piece number
-    return  list_number_position_to_place[list_compatibilities_to_add.index(max(list_compatibilities_to_add))], \
-            max(list_compatibilities_to_add), \
-            find_best_one_piece_to_one_place(puzzle,list_number_position_to_place[list_compatibilities_to_add.index(max(list_compatibilities_to_add))], Matrix)[0]
+    for slot_coord in position_to_place(puzzle):
+        piece, value = find_best_one_piece_to_one_place(puzzle,slot_coord,Matrix)
+        if value > best_value:
+            best_value = value
+            best_position = slot_coord
+            best_piece = piece
+    return best_position, piece
 
 
 
