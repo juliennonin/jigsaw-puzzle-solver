@@ -9,7 +9,7 @@ Consider starting the commit message with the following "types" (should be place
 * **Feat**: a new (important) feature
 * **Fix**: a bug fix
 * **Fix #[issue]**: fix an issue reported on GitHub
-* **Test**: adding or fixingg test
+* **Test**: adding or fixing test
 * **Clean**: (re)move some files / folders
 * **Refactor**: refactoring code
 * **Merge**: merging commits / branches
