@@ -1,6 +1,7 @@
 import numpy as np
 from .puzzle import Piece,Slot
 
+
 def random_solver(puzzle,plotsteps=True):
     '''Solve a puzzle randomly'''
 
