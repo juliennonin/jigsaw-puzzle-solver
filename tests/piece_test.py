@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from jigsolver.puzzle import Piece,Puzzle
+from jigsolver import Border, Piece, Puzzle
 
 class PieceTestCase(unittest.TestCase):
     def setUp(self):
@@ -43,9 +43,17 @@ class PieceTestCase(unittest.TestCase):
         B[:, 1] = 1
         B=Piece(B)
 
-        self.assertEqual(A.diss(B), {'L': 0, 'R': 54, 'U': 51, 'B': 51})
-        self.assertEqual(B.diss(A), {'L': 54, 'R': 0, 'U': 51, 'B': 51})
+        diss = {
+            Border.TOP: 51,
+            Border.BOTTOM: 51,
+            Border.RIGHT: 54,
+            Border.LEFT: 0
+        }
+        self.assertDictEqual(A.diss(B), diss)
 
+        diss[Border.TOP], diss[Border.BOTTOM] = diss[Border.BOTTOM], diss[Border.TOP]
+        diss[Border.LEFT], diss[Border.RIGHT] = diss[Border.RIGHT], diss[Border.LEFT]
+        self.assertDictEqual(B.diss(A), diss)
 
 
 if __name__ == '__main__':

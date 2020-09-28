@@ -1,5 +1,5 @@
 import unittest
-from jigsolver.puzzle import Piece,Puzzle, Board, Slot
+from jigsolver import Board, Border, Piece, Puzzle, Slot
 import numpy as np
 from copy import copy
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ class PuzzleTestCase(unittest.TestCase):
         self.eiffel_puzzle.create_from_img(img_real)
     
     def test_puzzle_create_piece_size(self):
-        return self.assertEqual(self.eiffel_puzzle.board[0,0].size, 100)
+        self.assertEqual(self.eiffel_puzzle.board[0,0].size, 100)
 
     def test_create_puzzle_crop_test(self):
         self.assertEqual(self.puzzle.shape,(4,4))
@@ -70,8 +70,8 @@ class PuzzleTestCase(unittest.TestCase):
             #these two pieces should have a perfect compatibility for one side
             # (left of right depending of the piece considered as a reference)
 
-            self.assertEqual((P.CM)[0,1]['L'],1)
-            self.assertEqual((P.CM)[1,0]['R'], 1)
+            self.assertEqual(P.CM[0,1][Border.LEFT], 1)
+            self.assertEqual(P.CM[1,0][Border.RIGHT], 1)
 
 if __name__ == '__main__':
     unittest.main()
