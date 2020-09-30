@@ -44,9 +44,9 @@ def find_best_piece_for_slot(puzzle, slot_coord, compatibilities):
         diss_value = []
         for position,neigh in puzzle.board.neighbors(*slot_coord):
             if isinstance(neigh,Piece):
-                diss_value.append(compatibilities[piece.id, neigh.id][position])
+                diss_value.append(compatibilities[piece.id, neigh.id, position])
 
-        diss_value_avg = (sum(diss_value) / len(diss_value))
+        diss_value_avg = np.mean(diss_value)
         if diss_value_avg >= best_diss_value:
             best_diss_value = diss_value_avg
             best_piece = piece
