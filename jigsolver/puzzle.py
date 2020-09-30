@@ -27,6 +27,9 @@ class Border(Enum):
 class Board():
     def __init__(self, n_rows, n_cols, patch_size):
         self._grid = [[Slot(patch_size) for j in range(n_cols)] for i in range(n_rows)]
+        self.n_rows=n_rows
+        self.n_cols=n_cols
+        self.patch_size=patch_size
 
     def __getitem__(self, coords):
         i, j = coords
@@ -61,6 +64,9 @@ class Board():
             yield Border.BOTTOM.value, self[i+1, j]
         if j > 0:
             yield Border.LEFT.value, self[i, j-1]
+
+    def clean(self):
+        self._grid = [[Slot(self.patch_size) for j in range(self.n_cols)] for i in range(self.n_rows)]
 
 
 class Slot():
@@ -106,8 +112,10 @@ class Piece():
     def lab_to_rgb(self):
         return color.lab2rgb(self.picture)
 
+    def clean(self):
+        self._is_placed=False
 
-    def diss(self,other,p=2,q=2,lab_space=False):
+    def diss(self,other,p=2,q=1,lab_space=False):
         '''Return the dissimilarities between the current Piece and the other for the four sides'''
 
         currentPiece=self.rgb_to_lab() if lab_space else self
@@ -115,7 +123,7 @@ class Piece():
         diss = {}
         for border in Border:
             diss[border] = np.power(
-                np.sum(np.power(self.get_border(border) - other.get_border(border.opposite), p)),q/p)
+                np.sum(np.power(self.get_border(border) - other.get_border(border.opposite), p)),q)
         return diss
 
     def __eq__(self, other):
@@ -213,6 +221,12 @@ class Puzzle():
         plt.imshow(puzzle_plot)
         plt.show()
 
+    def clean(self):
+        "clean the current puzzle | Restart the party"
+        self.board.clean()
+        for Piece in self.bag_of_pieces:
+            Piece.clean()
+
     def set_CM_Cho(self):
         "set the compatibility matrix associated to our current puzzle - Cho paper"
 
@@ -221,7 +235,7 @@ class Puzzle():
         CM=[]
 
         #function enabling to jump from dissimilarities into probabilities
-        h = lambda x,sigma: np.round(np.exp(-x / (2 * (sigma ** 2))),2)
+        h = lambda x,sigma: np.round(np.exp(-x / (2 * (sigma ** 2))),3)
 
         for i,Piece in enumerate(self.bag_of_pieces):
 
@@ -254,15 +268,15 @@ class Puzzle():
             self.CM=np.array(CM)
 
 
-    def set_CM_Pomeranz(self,p=2,q=2):
-        "set the compatibility matrix associated to our current puzzle - Cho paper"
+    def set_CM_Pomeranz(self,p=2,q=1):
+        "set the compatibility matrix associated to our current puzzle - Pomeranz paper"
 
         assert self.bag_of_pieces, "A puzzle should be created"
 
         CM=[]
 
         #function enabling to jump from dissimilarities into probabilities
-        h = lambda x,quartile: np.round(np.exp(-x /quartile))
+        h = lambda x,quartile: np.round(np.exp(-x/quartile),3)
 
         for i,Piece in enumerate(self.bag_of_pieces):
 
