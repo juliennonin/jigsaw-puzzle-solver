@@ -25,35 +25,32 @@ class Border(Enum):
 
 
 class Board():
-    def __init__(self, n_rows, n_cols, patch_size):
-        self._grid = [[Slot(patch_size) for j in range(n_cols)] for i in range(n_rows)]
-        self.n_rows=n_rows
-        self.n_cols=n_cols
-        self.patch_size=patch_size
+    def __init__(self, n_rows, n_cols):
+        self._grid = np.array([[Slot(i * n_cols + j) for j in range(n_cols)] for i in range(n_rows)])
 
     def __getitem__(self, coords):
         i, j = coords
-        return self._grid[i][j]
+        return self._grid[i,j]
 
     def __setitem__(self, coords, value):
         assert isinstance(value, Slot) or isinstance(value, Piece), (
             f"value is an instance of {type(value)} instead of Slot or Piece")
         i, j = coords
-        self._grid[i][j] = value
+        self._grid[i,j] = value
 
     def __iter__(self):
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
-                yield self._grid[i][j]
+                yield self._grid[i,j]
 
     def enumerate(self):
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
-                yield (i, j), self._grid[i][j]
+                yield (i, j), self._grid[i,j]
 
     @property
     def shape(self):
-        return (len(self._grid), len(self._grid[0]))
+        return self._grid.shape
 
     def neighbors(self, i, j):
         if i > 0:
@@ -65,18 +62,19 @@ class Board():
         if j > 0:
             yield Border.LEFT.value, self[i, j-1]
 
-    def clean(self):
-        self._grid = [[Slot(self.patch_size) for j in range(self.n_cols)] for i in range(self.n_rows)]
-
 
 class Slot():
-    def __init__(self, patch_size):
-        self.patch_size = patch_size
+    def __init__(self, id):
+        self._id = id
         self.available = False
+    
+    @property
+    def id(self):
+        return self._id
 
     @property
     def picture(self):
-            return np.zeros((self.patch_size, self.patch_size, 3))
+            return 0
 
 
 
@@ -112,10 +110,10 @@ class Piece():
     def lab_to_rgb(self):
         return color.lab2rgb(self.picture)
 
-    def clean(self):
-        self._is_placed=False
+    def _clean(self):
+        self._is_placed = False
 
-    def diss(self,other,p=2,q=1,lab_space=False):
+    def diss(self, other, p=2, q=1, lab_space=False):
         '''Return the dissimilarities between the current Piece and the other for the four sides'''
 
         currentPiece=self.rgb_to_lab() if lab_space else self
@@ -263,7 +261,7 @@ class Puzzle():
         img_cropped = img[:n_rows * ps, :n_columns * ps]
     
         ## Populate the board
-        self.board = Board(n_rows, n_columns, ps)
+        self.board = Board(n_rows, n_columns)
         for i in range(n_rows):
             for j in range(n_columns):
                 piece = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps], i * n_columns + j)
@@ -274,7 +272,7 @@ class Puzzle():
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
-        self.board = Board(n_rows, n_colums, self.patch_size)
+        self.board = Board(n_rows, n_colums)
         np.random.shuffle(self.bag_of_pieces)
         for i, piece in enumerate(self.bag_of_pieces):
             piece._is_placed = False
@@ -321,9 +319,9 @@ class Puzzle():
 
     def clean(self):
         "clean the current puzzle | Restart the party"
-        self.board.clean()
-        for Piece in self.bag_of_pieces:
-            Piece.clean()
+        self.board = Board(*self.shape)
+        for piece in self.bag_of_pieces:
+            piece._clean()
 
 
     def set_CM(self):

@@ -27,13 +27,13 @@ class PuzzleTestCase(unittest.TestCase):
     def test_shuffle_puzzle(self):
         self.puzzle.shuffle()
         self.assertEqual(len(self.puzzle.bag_of_pieces), 16)
-        empty_board = Board(4, 4, None)
+        empty_board = Board(4, 4)
         self.assertEqual(self.puzzle.board.shape,empty_board.shape)
 
     def test_shuffle_puzzle_real_img(self):
         self.eiffel_puzzle.shuffle()
         self.assertEqual(len(self.eiffel_puzzle.bag_of_pieces), 28)
-        empty_board = Board(4, 7, None)
+        empty_board = Board(4, 7)
         self.assertEqual(self.eiffel_puzzle.board.shape,empty_board.shape)
 
     def test_puzzle_copy(self):
