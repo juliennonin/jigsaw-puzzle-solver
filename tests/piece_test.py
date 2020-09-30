@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from jigsolver import Border, Piece, Puzzle
+from jigsolver.metrics import dissimilarity
 
 class PieceTestCase(unittest.TestCase):
     def setUp(self):
@@ -43,17 +44,17 @@ class PieceTestCase(unittest.TestCase):
         B[:, 1] = 1
         B=Piece(B)
 
-        diss = {
-            Border.TOP: 51,
-            Border.BOTTOM: 51,
-            Border.RIGHT: 54,
-            Border.LEFT: 0
-        }
-        self.assertDictEqual(A.diss(B), diss)
+        diss = [0] * len(Border)
+        diss[Border.TOP.value] = 51
+        diss[Border.BOTTOM.value] = 51
+        diss[Border.RIGHT.value] = 54
+        diss[Border.LEFT.value] = 0
 
-        diss[Border.TOP], diss[Border.BOTTOM] = diss[Border.BOTTOM], diss[Border.TOP]
-        diss[Border.LEFT], diss[Border.RIGHT] = diss[Border.RIGHT], diss[Border.LEFT]
-        self.assertDictEqual(B.diss(A), diss)
+        self.assertListEqual(dissimilarity(A, B), diss)
+
+        diss[Border.TOP.value], diss[Border.BOTTOM.value] = diss[Border.BOTTOM.value], diss[Border.TOP.value]
+        diss[Border.LEFT.value], diss[Border.RIGHT.value] = diss[Border.RIGHT.value], diss[Border.LEFT.value]
+        self.assertListEqual(dissimilarity(B, A), diss)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 import unittest
 from jigsolver import Board, Border, Piece, Puzzle, Slot
+from jigsolver.metrics import cho_CM, pomeranz_CM
 import numpy as np
 from copy import copy
 import matplotlib.pyplot as plt
@@ -66,13 +67,13 @@ class PuzzleTestCase(unittest.TestCase):
 
             P.bag_of_pieces = [A, B]
 
-            P.set_CM_Cho()
+            CM = cho_CM(P)
 
             #these two pieces should have a perfect compatibility for one side
             # (left of right depending of the piece considered as a reference)
 
-            self.assertEqual(P.CM[0,1][Border.LEFT], 1)
-            self.assertEqual(P.CM[1,0][Border.RIGHT], 1)
+            self.assertEqual(CM[0, 1, Border.LEFT.value], 1)
+            self.assertEqual(CM[1, 0, Border.RIGHT.value], 1)
 
     def test_piece_compatibility_matrix_pomeranz(self):
             P = Puzzle(patch_size=2)
@@ -83,21 +84,21 @@ class PuzzleTestCase(unittest.TestCase):
 
             A[:, 0] = 1
             A[:, 1] = 2
-            A = Piece(A)
+            A = Piece(A, 0)
 
             B[:, 0] = 5
             B[:, 1] = 1
-            B = Piece(B)
+            B = Piece(B, 1)
 
             P.bag_of_pieces = [A, B]
 
-            P.set_CM_Pomeranz()
+            CM = pomeranz_CM(P)
          
             #these two pieces should have a perfect compatibility for one side
             # (left of right depending of the piece considered as a reference)
 
-            self.assertEqual((P.CM)[0,1][Border.LEFT],1)
-            self.assertEqual((P.CM)[1,0][Border.RIGHT], 1)
+            self.assertEqual(CM[0, 1, Border.LEFT.value],1)
+            self.assertEqual(CM[1, 0, Border.RIGHT.value], 1)
 
 if __name__ == '__main__':
     unittest.main()
