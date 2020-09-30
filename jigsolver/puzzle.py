@@ -1,7 +1,28 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+from enum import Enum
 from copy import copy, deepcopy
 from skimage import io, color
+
+class Border(Enum):
+    def __new__(cls, value, slice):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.slice = slice
+        return obj
+    TOP = (0, np.index_exp[0,:])
+    RIGHT = (1, np.index_exp[:,-1])
+    BOTTOM = (2, np.index_exp[-1,:])
+    LEFT = (3, np.index_exp[:,0])
+
+    @property
+    def opposite(self):
+        opposite_value = (self.value + 2) % 4
+        if 0 <= opposite_value <= 3:
+            return Border(opposite_value)
+        raise NotImplementedError     
+
 
 class Board():
     def __init__(self, n_rows, n_cols, patch_size):
@@ -12,39 +33,40 @@ class Board():
         return self._grid[i][j]
 
     def __setitem__(self, coords, value):
+        assert isinstance(value, Slot) or isinstance(value, Piece), (
+            f"value is an instance of {type(value)} instead of Slot or Piece")
         i, j = coords
-        if isinstance(value, Slot) or isinstance(value, Piece):
-            self._grid[i][j] = value
-        else:
-            raise AttributeError("value must be an instance of Slot or Piece")
+        self._grid[i][j] = value
 
     def __iter__(self):
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
                 yield self._grid[i][j]
 
+    def enumerate(self):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                yield (i, j), self._grid[i][j]
+
     @property
     def shape(self):
         return (len(self._grid), len(self._grid[0]))
 
     def neighbors(self, i, j):
-        #up
         if i > 0:
-            yield self[i-1, j]
-        #right
+            yield Border.TOP.value, self[i-1, j]
         if j < self.shape[1]-1:
-            yield self[i, j+1]
-        #down
+            yield Border.RIGHT.value, self[i, j+1]
         if i < self.shape[0]-1:
-            yield self[i+1, j]
-        #left
+            yield Border.BOTTOM.value, self[i+1, j]
         if j > 0:
-            yield self[i, j-1]
+            yield Border.LEFT.value, self[i, j-1]
 
 
 class Slot():
     def __init__(self, patch_size):
         self.patch_size = patch_size
+        self.available = False
 
     @property
     def picture(self):
@@ -53,33 +75,30 @@ class Slot():
 
 
 class Piece():
-    def __init__(self, picture):
+    def __init__(self, picture, id=None):
         picture = np.array(picture, dtype=int)
         assert picture.ndim == 3, "The picture must be 3-dimensional, i.e. of shape (n,n,3)"
         assert picture.shape[2] == 3, "Each pixel of the picture must have 3 color values"
         assert picture.shape[0] == picture.shape[1], "The image must not be rectangular but squared in shape"
 
+        self._id = id
         self.picture = picture
+        self._is_placed = False
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def is_placed(self):
+        return self._is_placed
 
     @property
     def size(self):
         return len(self.picture)
 
-    @property
-    def right(self):
-        return self.picture[:,-1,:].reshape(self.size,1,3)
-
-    @property
-    def left(self):
-        return self.picture[:,0,:].reshape(self.size,1,3)
-
-    @property
-    def up(self):
-        return self.picture[0,:,:].reshape(1,self.size,3)
-        
-    @property
-    def bottom(self):
-        return self.picture[-1,:,:].reshape(1,self.size,3)
+    def get_border(self, border):
+        return self.picture[border.slice]
 
     def rgb_to_lab(self):
         return color.rgb2lab(self.picture)
@@ -88,25 +107,21 @@ class Piece():
         return color.lab2rgb(self.picture)
 
 
-    def diss(self,otherPiece,p=2,q=2,lab_space=False):
-        '''Return the dissimilarities between the current Piece and the otherPiece for the four sides'''
+    def diss(self,other,p=2,q=2,lab_space=False):
+        '''Return the dissimilarities between the current Piece and the other for the four sides'''
 
         currentPiece=self.rgb_to_lab() if lab_space else self
 
-        dict={}
-        dict['L']=np.power(np.sum(np.power((otherPiece.right-currentPiece.left),p)),q/p)
-        dict['R']=np.power(np.sum(np.power((currentPiece.right-otherPiece.left),p)),q/p)
-        dict['U']=np.power(np.sum(np.power((otherPiece.bottom-currentPiece.up),p)),q/p)
-        dict['B']=np.power(np.sum(np.power((currentPiece.bottom - otherPiece.up), p)),q/p)
+        diss = {}
+        for border in Border:
+            diss[border] = np.power(
+                np.sum(np.power(self.get_border(border) - other.get_border(border.opposite), p)),q/p)
+        return diss
 
-        return dict
-
-    def __eq__(self, otherPiece):
-        return np.allclose(self.picture,otherPiece.picture)
-
-    # def __repr__(self):
-    #     return f'Piece({self.position})'
-
+    def __eq__(self, other):
+        if isinstance(other, Piece):
+            return np.allclose(self.picture, other.picture)
+        return False
 
 
 class Puzzle():
@@ -122,6 +137,14 @@ class Puzzle():
         assert self.board, "Puzzle board is empty."
         return self.board.shape
 
+    @property
+    def pieces_placed(self):
+        return filter(lambda piece: piece.is_placed, self.bag_of_pieces)
+
+    @property
+    def pieces_remaining(self):
+        return [piece for piece in self.bag_of_pieces if not piece.is_placed]
+        #≡ return filter(lambda piece: not piece.is_placed, self.bag_of_pieces)
 
     def create_from_img(self, img):
         '''Create the pieces from an img and put them in the board'''
@@ -137,18 +160,36 @@ class Puzzle():
         self.board = Board(n_rows, n_columns, ps)
         for i in range(n_rows):
             for j in range(n_columns):
-                self.board[i,j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+                piece = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps], i * n_columns + j)
+                self.bag_of_pieces.append(piece)
+                self.board[i,j] = piece
         return self
-
 
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
-        for i in range(n_rows):
-            for j in range(n_colums):
-                self.bag_of_pieces.append(self.board[i,j])
         self.board = Board(n_rows, n_colums, self.patch_size)
         np.random.shuffle(self.bag_of_pieces)
+        for i, piece in enumerate(self.bag_of_pieces):
+            piece._is_placed = False
+            piece._id = i
+
+    
+    def place(self, piece, coords):
+        """Places a piece at the given coordinates
+            * set _is_placed to True
+            * make the neighboring slots available
+        """
+        i, j = coords
+        assert isinstance(piece, Piece), "must be an instance of Piece."
+        assert isinstance(self.board[i, j], Slot), f"A piece is already placed at {coords}."
+        assert not piece._is_placed, "This Piece has already been placed"
+        
+        self.board[i,j] = piece
+        piece._is_placed = True
+        for position, slot in self.board.neighbors(i, j):
+            if isinstance(slot, Slot):
+                slot.available = True
 
 
     def display(self, show_borders=True):
@@ -229,10 +270,10 @@ class Puzzle():
             #Piece and all the others Piece.
             f=lambda otherPiece: Piece.diss(otherPiece,p=p,q=q)
 
-            left=lambda otherPiece: f(otherPiece)['L']
-            right=lambda otherPiece : f(otherPiece)['R']
-            up=lambda otherPiece : f(otherPiece)['U']
-            bottom=lambda otherPiece : f(otherPiece)['B']
+            left=lambda otherPiece: f(otherPiece)[Border.LEFT]
+            right=lambda otherPiece : f(otherPiece)[Border.RIGHT]
+            top=lambda otherPiece : f(otherPiece)[Border.TOP]
+            bottom=lambda otherPiece : f(otherPiece)[Border.BOTTOM]
 
             CM.append([f(otherPiece) for otherPiece in self.bag_of_pieces])
 
@@ -241,15 +282,15 @@ class Puzzle():
             #We don't count the current piece for the normalization
             Left = list(map(left,filter(lambda x: x!=Piece,self.bag_of_pieces)))
             Right = list((map(right, filter(lambda x: x != Piece, self.bag_of_pieces))))
-            Up = list((map(up, filter(lambda x: x != Piece, self.bag_of_pieces))))
+            Top = list((map(top, filter(lambda x: x != Piece, self.bag_of_pieces))))
             Bottom = list((map(bottom, filter(lambda x: x != Piece, self.bag_of_pieces))))
 
             #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
             quartiles={}
-            quartiles['L']=np.quantile(Left,q=0.25) if np.quantile(Left,q=0.25)!=0 else 1
-            quartiles['R']=np.quantile(Right, q=0.25) if np.quantile(Right,q=0.25)!=0 else 1
-            quartiles['U']=np.quantile(Up, q=0.25) if np.quantile(Up,q=0.25)!=0 else 1
-            quartiles['B']=np.quantile(Bottom,q=0.25) if np.quantile(Bottom,q=0.25)!=0 else 1
+            quartiles[Border.LEFT]=np.quantile(Left,q=0.25) if np.quantile(Left,q=0.25)!=0 else 1
+            quartiles[Border.RIGHT]=np.quantile(Right, q=0.25) if np.quantile(Right,q=0.25)!=0 else 1
+            quartiles[Border.TOP]=np.quantile(Top, q=0.25) if np.quantile(Top,q=0.25)!=0 else 1
+            quartiles[Border.BOTTOM]=np.quantile(Bottom,q=0.25) if np.quantile(Bottom,q=0.25)!=0 else 1
 
             #Normalization
             for diss in CM[-1]:
