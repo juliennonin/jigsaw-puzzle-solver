@@ -132,12 +132,110 @@ class Piece():
         return False
 
 
+class Cho():
+
+    def __init__(self,puzzle):
+        self.puzzle=puzzle
+
+    def set_CM(self):
+        "set the compatibility matrix associated to our current puzzle - Cho paper"
+
+        assert self.puzzle.bag_of_pieces, "A puzzle should be created"
+
+        CM=[]
+
+        #function enabling to jump from dissimilarities into probabilities
+        h = lambda x,sigma: np.round(np.exp(-x / (2 * (sigma ** 2))),3)
+
+        for i,Piece in enumerate(self.puzzle.bag_of_pieces):
+
+            #We need to obtain the dissimilarities between the current
+            #Piece and all the others Piece.
+            f=lambda otherPiece: Piece.diss(otherPiece)
+            g=lambda otherPiece: list(f(otherPiece).values())
+
+            CM.append([f(otherPiece) for otherPiece in self.puzzle.bag_of_pieces])
+
+            # **Normalization of dissimilarities (suggested by the Cho Paper)**
+
+            #We don't count the current piece for the normalization
+            Values = list((map(g,filter(lambda x: x!=Piece,self.puzzle.bag_of_pieces))))
+
+            #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
+            Values=np.sort(np.array(Values).reshape(-1))
+
+            #kind of standard deviation - handling of the case where there are only two pieces
+            try:
+                sigma=(Values[1]-Values[0]) if (Values[1]-Values[0]!=0) else 1
+            except:
+                sigma=Values[0] if (Values[0]!=0) else 1
+
+            #Normalization
+            for diss in CM[-1]:
+                for key in diss.keys():
+                    diss[key]=h(diss[key],sigma)
+
+            self.puzzle.CM=np.array(CM)
+
+class Pomeranz():
+    def __init__(self,puzzle,p=2,q=1):
+        self.puzzle=puzzle
+        self.p=p
+        self.q=q
+
+    def set_CM(self):
+        "set the compatibility matrix associated to our current puzzle - Pomeranz paper"
+
+        assert self.puzzle.bag_of_pieces, "A puzzle should be created"
+
+        CM=[]
+
+        #function enabling to jump from dissimilarities into probabilities
+        h = lambda x,quartile: np.round(np.exp(-x/quartile),3)
+
+        for i,Piece in enumerate(self.puzzle.bag_of_pieces):
+
+            #We need to obtain the dissimilarities between the current
+            #Piece and all the others Piece.
+            f=lambda otherPiece: Piece.diss(otherPiece,p=self.p,q=self.q)
+
+            left=lambda otherPiece: f(otherPiece)[Border.LEFT]
+            right=lambda otherPiece : f(otherPiece)[Border.RIGHT]
+            top=lambda otherPiece : f(otherPiece)[Border.TOP]
+            bottom=lambda otherPiece : f(otherPiece)[Border.BOTTOM]
+
+            CM.append([f(otherPiece) for otherPiece in self.puzzle.bag_of_pieces])
+
+            # **Normalization of dissimilarities (suggested by the Cho Paper)**
+
+            #We don't count the current piece for the normalization
+            Left = list(map(left,filter(lambda x: x!=Piece,self.puzzle.bag_of_pieces)))
+            Right = list((map(right, filter(lambda x: x != Piece, self.puzzle.bag_of_pieces))))
+            Top = list((map(top, filter(lambda x: x != Piece, self.puzzle.bag_of_pieces))))
+            Bottom = list((map(bottom, filter(lambda x: x != Piece, self.puzzle.bag_of_pieces))))
+
+            #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
+            quartiles={}
+            quartiles[Border.LEFT]=np.quantile(Left,q=0.25) if np.quantile(Left,q=0.25)!=0 else 1
+            quartiles[Border.RIGHT]=np.quantile(Right, q=0.25) if np.quantile(Right,q=0.25)!=0 else 1
+            quartiles[Border.TOP]=np.quantile(Top, q=0.25) if np.quantile(Top,q=0.25)!=0 else 1
+            quartiles[Border.BOTTOM]=np.quantile(Bottom,q=0.25) if np.quantile(Bottom,q=0.25)!=0 else 1
+
+            #Normalization
+            for diss in CM[-1]:
+                for key in diss.keys():
+                    diss[key]=h(diss[key],quartiles[key])
+
+        self.puzzle.CM=np.array(CM)
+
+
 class Puzzle():
     def __init__(self, patch_size=100, seed=0):
         self.patch_size = patch_size
         self.seed = seed
         self.bag_of_pieces = []
         self.board = None
+        self.solver=Cho(self)
 
     @property
     def shape(self):
@@ -227,91 +325,12 @@ class Puzzle():
         for Piece in self.bag_of_pieces:
             Piece.clean()
 
-    def set_CM_Cho(self):
-        "set the compatibility matrix associated to our current puzzle - Cho paper"
 
-        assert self.bag_of_pieces, "A puzzle should be created"
+    def set_CM(self):
+        self.solver.set_CM()
 
-        CM=[]
-
-        #function enabling to jump from dissimilarities into probabilities
-        h = lambda x,sigma: np.round(np.exp(-x / (2 * (sigma ** 2))),3)
-
-        for i,Piece in enumerate(self.bag_of_pieces):
-
-            #We need to obtain the dissimilarities between the current
-            #Piece and all the others Piece.
-            f=lambda otherPiece: Piece.diss(otherPiece)
-            g=lambda otherPiece: list(f(otherPiece).values())
-
-            CM.append([f(otherPiece) for otherPiece in self.bag_of_pieces])
-
-            # **Normalization of dissimilarities (suggested by the Cho Paper)**
-
-            #We don't count the current piece for the normalization
-            Values = list((map(g,filter(lambda x: x!=Piece,self.bag_of_pieces))))
-
-            #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
-            Values=np.sort(np.array(Values).reshape(-1))
-
-            #kind of standard deviation - handling of the case where there are only two pieces
-            try:
-                sigma=(Values[1]-Values[0]) if (Values[1]-Values[0]!=0) else 1
-            except:
-                sigma=Values[0] if (Values[0]!=0) else 1
-
-            #Normalization
-            for diss in CM[-1]:
-                for key in diss.keys():
-                    diss[key]=h(diss[key],sigma)
-
-            self.CM=np.array(CM)
-
-
-    def set_CM_Pomeranz(self,p=2,q=1):
-        "set the compatibility matrix associated to our current puzzle - Pomeranz paper"
-
-        assert self.bag_of_pieces, "A puzzle should be created"
-
-        CM=[]
-
-        #function enabling to jump from dissimilarities into probabilities
-        h = lambda x,quartile: np.round(np.exp(-x/quartile),3)
-
-        for i,Piece in enumerate(self.bag_of_pieces):
-
-            #We need to obtain the dissimilarities between the current
-            #Piece and all the others Piece.
-            f=lambda otherPiece: Piece.diss(otherPiece,p=p,q=q)
-
-            left=lambda otherPiece: f(otherPiece)[Border.LEFT]
-            right=lambda otherPiece : f(otherPiece)[Border.RIGHT]
-            top=lambda otherPiece : f(otherPiece)[Border.TOP]
-            bottom=lambda otherPiece : f(otherPiece)[Border.BOTTOM]
-
-            CM.append([f(otherPiece) for otherPiece in self.bag_of_pieces])
-
-            # **Normalization of dissimilarities (suggested by the Cho Paper)**
-
-            #We don't count the current piece for the normalization
-            Left = list(map(left,filter(lambda x: x!=Piece,self.bag_of_pieces)))
-            Right = list((map(right, filter(lambda x: x != Piece, self.bag_of_pieces))))
-            Top = list((map(top, filter(lambda x: x != Piece, self.bag_of_pieces))))
-            Bottom = list((map(bottom, filter(lambda x: x != Piece, self.bag_of_pieces))))
-
-            #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
-            quartiles={}
-            quartiles[Border.LEFT]=np.quantile(Left,q=0.25) if np.quantile(Left,q=0.25)!=0 else 1
-            quartiles[Border.RIGHT]=np.quantile(Right, q=0.25) if np.quantile(Right,q=0.25)!=0 else 1
-            quartiles[Border.TOP]=np.quantile(Top, q=0.25) if np.quantile(Top,q=0.25)!=0 else 1
-            quartiles[Border.BOTTOM]=np.quantile(Bottom,q=0.25) if np.quantile(Bottom,q=0.25)!=0 else 1
-
-            #Normalization
-            for diss in CM[-1]:
-                for key in diss.keys():
-                    diss[key]=h(diss[key],quartiles[key])
-
-        self.CM=np.array(CM)
+    def set_Pomeranz(self,p=2,q=1):
+        self.solver=Pomeranz(self,p,q)
 
     def __copy__(self):
         new_puzzle = Puzzle(self.patch_size)
