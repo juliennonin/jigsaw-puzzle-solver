@@ -113,10 +113,10 @@ class Piece():
     def _clean(self):
         self._is_placed = False
 
-    # def __eq__(self, other):
-    #     if isinstance(other, Piece):
-    #         return np.allclose(self.picture, other.picture)
-    #     return False
+    def __eq__(self, other):
+        if isinstance(other, Piece):
+            return np.allclose(self.picture, other.picture)
+        return False
 
 
 class Puzzle():

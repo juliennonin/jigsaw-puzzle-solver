@@ -1,5 +1,5 @@
 
-from jigsolver.puzzle import Border
+from jigsolver.puzzle import Border,Puzzle
 import numpy as np
 
 
@@ -100,3 +100,62 @@ def pomeranz_CM(puzzle, p=2, q=1):
                 diss[i]=h(diss[i], quartiles[i])
 
     return np.array(CM)
+
+def simple_evaluation(ground_truth,solver_output):
+     assert isinstance(ground_truth,Puzzle) and isinstance(solver_output,Puzzle), 'The two input should be instances of Puzzle'
+     assert (ground_truth.board.shape==solver_output.board.shape), "You can't compare two inputs of different shape"
+     assert (ground_truth.board and solver_output.board), "At least one input has no Board"
+
+     n,m = ground_truth.board.shape
+
+     return np.mean([ground_truth.board[i,j] == solver_output.board[i,j] for i in range(n) for j in range(m)])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
