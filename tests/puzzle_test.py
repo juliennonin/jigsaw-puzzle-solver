@@ -1,8 +1,8 @@
 import unittest
 from jigsolver import Board, Border, Piece, Puzzle, Slot
-from jigsolver.metrics import cho_CM, pomeranz_CM, simple_evaluation
+from jigsolver.metrics import *
 import numpy as np
-from copy import copy
+from copy import copy,deepcopy
 import matplotlib.pyplot as plt
 
 class PuzzleTestCase(unittest.TestCase):
@@ -20,6 +20,7 @@ class PuzzleTestCase(unittest.TestCase):
         # creating a very simple puzzle
         A = np.zeros((2, 2, 3)).astype(int)
         B = A.copy()
+        C = B.copy()
 
 
         A[:, 0] = 5
@@ -30,20 +31,29 @@ class PuzzleTestCase(unittest.TestCase):
         B[:, 1] = 2
         B = Piece(B, 1)
 
-        P = Puzzle(patch_size=2)
-        P.bag_of_pieces = [A, B]
+        C[:, 0] = 20
+        C[:, 1] = 50
+        C = Piece(C, 2)
 
-        P_board = Board(1, 2)
+        D=B.copy()
+
+        P = Puzzle(patch_size=2)
+        P.bag_of_pieces = [A, B, C, D]
+
+        P_board = Board(1, 4)
         P.board=P_board
         P.place(A,(0,0))
         P.place(B,(0,1))
+        P.place(C,(0,2))
+        P.place(D,(0,3))
 
-        Q=P.__copy__()
+        Q=deepcopy(P)
         Q.board[0,0]=B
         Q.board[0,1]=A
 
+
         self.simple_puzzle=P
-        self.simple_puzzle_reversed=Q
+        self.inferred_puzzle=Q
     
     def test_puzzle_create_piece_size(self):
         self.assertEqual(self.eiffel_puzzle.board[0,0].size, 100)
@@ -102,7 +112,22 @@ class PuzzleTestCase(unittest.TestCase):
         self.assertEqual(simple_evaluation(self.eiffel_puzzle,self.eiffel_puzzle_copy),1)
 
         #Case where the puzzle is completely not solved
-        self.assertEqual(simple_evaluation(self.simple_puzzle,self.simple_puzzle_reversed),0)
+        self.assertEqual(simple_evaluation(self.simple_puzzle,self.inferred_puzzle),0.5)
+
+
+    def test_puzzle_fraction_of_correct_neighbors(self):
+        self.assertEqual(fraction_of_correct_neighbors((0, 0), self.simple_puzzle, self.inferred_puzzle), 0)
+        self.assertEqual(fraction_of_correct_neighbors((0, 1), self.simple_puzzle, self.inferred_puzzle), 0)
+        self.assertEqual(fraction_of_correct_neighbors((0,2),self.simple_puzzle,self.inferred_puzzle), 0.5)
+        self.assertEqual(fraction_of_correct_neighbors((0, 3), self.simple_puzzle, self.inferred_puzzle), 1)
+
+
+    # def test_puzzle_neighbor_comparison(self):
+    #         # Case where the puzzle is perfectly solved
+    #         self.assertEqual(neighbor_comparison(self.eiffel_puzzle, self.eiffel_puzzle_copy), 1)
+    #
+    #         # Case where the puzzle is not completely solved
+    #         self.assertEqual(neighbor_comparison(self.simple_puzzle, self.inferred_puzzle), 0.25)
 
 
 if __name__ == '__main__':

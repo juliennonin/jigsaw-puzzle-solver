@@ -118,6 +118,9 @@ class Piece():
             return np.allclose(self.picture, other.picture)
         return False
 
+    def copy(self):
+        return Piece(self.picture.copy())
+
 
 class Puzzle():
     def __init__(self, patch_size=100, seed=0):
@@ -207,6 +210,17 @@ class Puzzle():
     
         plt.imshow(puzzle_plot)
         plt.show()
+
+    def find_position(self,id):
+        assert self.board, 'A board must be created'
+        assert not(self.pieces_remaining), 'All the pieces must be placed to call this function'
+        assert (id in [piece.id for piece in self.bag_of_pieces]), 'The id provided should correspond to the id of ' \
+                                                                   'a Piece in the Puzzle !'
+        n,m = self.shape
+        for i in range(n):
+            for j in range(m):
+                if (self.board[i,j].id==id):
+                    return (i,j)
 
     def clean(self):
         "clean the current puzzle | Restart the party"
