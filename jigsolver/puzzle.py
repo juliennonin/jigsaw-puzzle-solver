@@ -25,61 +25,77 @@ class Border(Enum):
 
 
 class Board():
-    def __init__(self, n_rows, n_cols, patch_size):
-        self._grid = [[Slot(patch_size) for j in range(n_cols)] for i in range(n_rows)]
+    def __init__(self, n_rows, n_cols):
+        self._grid = np.array([[Slot(i * n_cols + j) for j in range(n_cols)] for i in range(n_rows)])
 
     def __getitem__(self, coords):
         i, j = coords
-        return self._grid[i][j]
+        return self._grid[i,j]
 
     def __setitem__(self, coords, value):
         assert isinstance(value, Slot) or isinstance(value, Piece), (
             f"value is an instance of {type(value)} instead of Slot or Piece")
         i, j = coords
-        self._grid[i][j] = value
+        self._grid[i,j] = value
 
     def __iter__(self):
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
-                yield self._grid[i][j]
+                yield self._grid[i,j]
+
+    def enumerate(self):
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                yield (i, j), self._grid[i,j]
 
     @property
     def shape(self):
-        return (len(self._grid), len(self._grid[0]))
+        return self._grid.shape
 
     def neighbors(self, i, j):
-        # top
         if i > 0:
-            yield self[i-1, j]
-        # right
+            yield Border.TOP.value, self[i-1, j]
         if j < self.shape[1]-1:
-            yield self[i, j+1]
-        # down
+            yield Border.RIGHT.value, self[i, j+1]
         if i < self.shape[0]-1:
-            yield self[i+1, j]
-        # left
+            yield Border.BOTTOM.value, self[i+1, j]
         if j > 0:
-            yield self[i, j-1]
+            yield Border.LEFT.value, self[i, j-1]
 
 
 class Slot():
-    def __init__(self, patch_size):
-        self.patch_size = patch_size
+    def __init__(self, id):
+        self._id = id
+        self.available = False
+    
+    @property
+    def id(self):
+        return self._id
 
     @property
     def picture(self):
-            return np.zeros((self.patch_size, self.patch_size, 3))
+            return 0
 
 
 
 class Piece():
-    def __init__(self, picture):
+    def __init__(self, picture, id=None):
         picture = np.array(picture, dtype=int)
         assert picture.ndim == 3, "The picture must be 3-dimensional, i.e. of shape (n,n,3)"
         assert picture.shape[2] == 3, "Each pixel of the picture must have 3 color values"
         assert picture.shape[0] == picture.shape[1], "The image must not be rectangular but squared in shape"
 
+        self._id = id
         self.picture = picture
+        self._is_placed = False
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def is_placed(self):
+        return self._is_placed
 
     @property
     def size(self):
@@ -94,22 +110,13 @@ class Piece():
     def lab_to_rgb(self):
         return color.lab2rgb(self.picture)
 
-    def diss(self,other,lab_space=False):
-        '''Return the dissimilarities between the current Piece and the other for the four sides'''
+    def _clean(self):
+        self._is_placed = False
 
-        currentPiece=self.rgb_to_lab() if lab_space else self
-
-        diss = {}
-        for border in Border:
-            diss[border] = np.sum(
-                np.power(self.get_border(border) - other.get_border(border.opposite), 2)
-            )
-        return diss
-
-    def __eq__(self, otherPiece):
-        return np.allclose(Piece.picture,otherPiece.picture)
-
-
+    # def __eq__(self, other):
+    #     if isinstance(other, Piece):
+    #         return np.allclose(self.picture, other.picture)
+    #     return False
 
 
 class Puzzle():
@@ -125,6 +132,14 @@ class Puzzle():
         assert self.board, "Puzzle board is empty."
         return self.board.shape
 
+    @property
+    def pieces_placed(self):
+        return filter(lambda piece: piece.is_placed, self.bag_of_pieces)
+
+    @property
+    def pieces_remaining(self):
+        return [piece for piece in self.bag_of_pieces if not piece.is_placed]
+        #≡ return filter(lambda piece: not piece.is_placed, self.bag_of_pieces)
 
     def create_from_img(self, img):
         '''Create the pieces from an img and put them in the board'''
@@ -137,21 +152,39 @@ class Puzzle():
         img_cropped = img[:n_rows * ps, :n_columns * ps]
     
         ## Populate the board
-        self.board = Board(n_rows, n_columns, ps)
+        self.board = Board(n_rows, n_columns)
         for i in range(n_rows):
             for j in range(n_columns):
-                self.board[i,j] = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps])
+                piece = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps], i * n_columns + j)
+                self.bag_of_pieces.append(piece)
+                self.board[i,j] = piece
         return self
-
 
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
-        for i in range(n_rows):
-            for j in range(n_colums):
-                self.bag_of_pieces.append(self.board[i,j])
-        self.board = Board(n_rows, n_colums, self.patch_size)
+        self.board = Board(n_rows, n_colums)
         np.random.shuffle(self.bag_of_pieces)
+        for i, piece in enumerate(self.bag_of_pieces):
+            piece._is_placed = False
+            piece._id = i
+
+    
+    def place(self, piece, coords):
+        """Places a piece at the given coordinates
+            * set _is_placed to True
+            * make the neighboring slots available
+        """
+        i, j = coords
+        assert isinstance(piece, Piece), "must be an instance of Piece."
+        assert isinstance(self.board[i, j], Slot), f"A piece is already placed at {coords}."
+        assert not piece._is_placed, "This Piece has already been placed"
+        
+        self.board[i,j] = piece
+        piece._is_placed = True
+        for position, slot in self.board.neighbors(i, j):
+            if isinstance(slot, Slot):
+                slot.available = True
 
 
     def display(self, show_borders=True):
@@ -175,35 +208,11 @@ class Puzzle():
         plt.imshow(puzzle_plot)
         plt.show()
 
-    def get_compatibilities(self):
-        "Return the compatibility matrix associated to our current puzzle"
-
-        assert self.bag_of_pieces, "A puzzle should be created"
-
-        CM=[]
-
-        for i,Piece in enumerate(self.bag_of_pieces):
-
-            bag_of_pieces=self.bag_of_pieces.copy()
-
-            f=lambda otherPiece: Piece.diss(otherPiece)
-            g=lambda otherPiece: list(Piece.diss(otherPiece).values())
-
-            CM.append([f(otherPiece) for otherPiece in bag_of_pieces])
-
-            #We don't count the current piece for the normalization
-            del bag_of_pieces[i]
-            Values = np.sort(list(map(g,bag_of_pieces))).reshape(-1)
-
-            sigma=Values[1]-Values[0]
-            h = lambda x: np.exp(-x/ (2 * (sigma ** 2)))
-
-            #Normalization
-            for diss in CM[-1]:
-                diss = {k:h(v) for k, v in diss.items()}
-
-
-        return np.array(CM)
+    def clean(self):
+        "clean the current puzzle | Restart the party"
+        self.board = Board(*self.shape)
+        for piece in self.bag_of_pieces:
+            piece._clean()
 
 
     def __copy__(self):
