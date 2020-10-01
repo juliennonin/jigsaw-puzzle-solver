@@ -4,6 +4,33 @@ from copy import copy
 import matplotlib.pyplot as plt
 
 
+def greedy_placer(puzzle, compatibilites, display=False):
+    n, m = puzzle.shape
+    n_pieces = n * m
+    M = np.zeros((n_pieces, n, m)) 
+    ## M[p,i,j] is the avg compatibility if piece #p was placed at (i,j) in the board 
+
+    def update_M(piece_id, slot_coords):
+        ## Remove the placed piece and the filled slot from matrix M
+        M[piece_id] = 0
+        M[:, slot_coords[0], slot_coords[1]] = 0
+
+        ## Update the scores (of all remaining pieces) for all neighboring slots
+        for i, j in puzzle.board.adjacent_empty_slots(*slot_coords):  # fore each neighboring slot
+            adjacent_pieces = [(position, piece) for position, piece in puzzle.board.neighbors(i,j) if isinstance(piece, Piece)]
+            for piece in puzzle.pieces_remaining:
+                scores = [compatibilites[piece.id, adjacent.id, position] for position, adjacent in adjacent_pieces]
+                M[piece.id, i, j] = sum(scores) / len(scores)
+
+    ## Main loop: find the best piece-slot pair and place it
+    for _ in range(len(list(puzzle.pieces_remaining))):
+        piece_id, *coords = np.unravel_index(np.argmax(M), M.shape)
+        piece = puzzle.bag_of_pieces[piece_id]
+        puzzle.place(piece, coords)
+        update_M(piece_id, coords)
+
+
+# %%
 def naiv_greedy_placer(puzzle, compatibilities, display=False):
     n_pieces = len(list(puzzle.pieces_remaining))
     
