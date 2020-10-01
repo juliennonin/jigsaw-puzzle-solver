@@ -22,7 +22,7 @@ def segmenter(puzzle,BB,n_iter=False):
     segments = [] # list of segments 
 
     if not n_iter : 
-        n_iter = min(5,int((puzzle.shape[0] * puzzle.shape[1]) /5))
+        n_iter = max(5,int((puzzle.shape[0] * puzzle.shape[1]) /5))
 
     for i in range(n_iter): # iterate n_iter times, #TODO make it dependant of size of the board 
 
