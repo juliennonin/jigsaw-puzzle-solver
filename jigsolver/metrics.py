@@ -1,4 +1,3 @@
-
 from jigsolver.puzzle import Border,Puzzle
 import numpy as np
 
@@ -103,13 +102,13 @@ def pomeranz_CM(puzzle, p=2, q=1):
 
 def simple_evaluation(ground_truth,solver_output):
     """Count the fraction of correct pieces in the solver's output"""
-     assert isinstance(ground_truth,Puzzle) and isinstance(solver_output,Puzzle), 'The two input should be instances of Puzzle'
-     assert (ground_truth.board.shape==solver_output.board.shape), "You can't compare two inputs of different shape"
-     assert (ground_truth.board and solver_output.board), "At least one input has no Board"
+    assert (isinstance(ground_truth,Puzzle) and isinstance(solver_output,Puzzle)), 'The two input should be instances of Puzzle'
+    assert (ground_truth.board.shape==solver_output.board.shape), "You can't compare two inputs of different shape"
+    assert (ground_truth.board and solver_output.board), "At least one input has no Board"
 
-     n,m = ground_truth.board.shape
+    n,m = ground_truth.board.shape
 
-     return np.mean([ground_truth.board[i,j] == solver_output.board[i,j] for i in range(n) for j in range(m)])
+    return np.mean([ground_truth.board[i,j] == solver_output.board[i,j] for i in range(n) for j in range(m)])
 
 def fraction_of_correct_neighbors(true_pos,ground_truth,solver_output):
     """For the piece located at the position pos in the solved puzzle, we compute the fraction of correct neighbors
@@ -138,12 +137,12 @@ def fraction_of_correct_neighbors(true_pos,ground_truth,solver_output):
     nb_neigbors=0
 
     for border, neighbor in solver_output.board.neighbors(r,s):
-            nb_neigbors+=1
-            # if there is a neighbor that shouldn't exist then, it's a wrong neighbor
-            if not(border) in correct_neighbors:
-                nb_incorrect_neighbors+=1
-            else:
-                nb_incorrect_neighbors+=not((correct_neighbors[border]==neighbor))
+        nb_neigbors+=1
+        # if there is a neighbor that shouldn't exist then, it's a wrong neighbor
+        if not(border) in correct_neighbors:
+            nb_incorrect_neighbors+=1
+        else:
+            nb_incorrect_neighbors+=not((correct_neighbors[border]==neighbor))
 
     return np.round((nb_neigbors-nb_incorrect_neighbors)/nb_neigbors,2)
 
@@ -155,56 +154,4 @@ def neighbor_comparison(ground_truth,solver_output):
 
     n, m = ground_truth.board.shape
 
-    return np.mean([fraction_of_correct_neighbors((i,j),ground_truth,solver_output) for i in range(n) for j in range(m)])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return np.round(np.mean([fraction_of_correct_neighbors((i,j),ground_truth,solver_output) for i in range(n) for j in range(m)]),2)

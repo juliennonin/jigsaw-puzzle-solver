@@ -122,12 +122,14 @@ class PuzzleTestCase(unittest.TestCase):
         self.assertEqual(fraction_of_correct_neighbors((0, 3), self.simple_puzzle, self.inferred_puzzle), 1)
 
 
-    # def test_puzzle_neighbor_comparison(self):
-    #         # Case where the puzzle is perfectly solved
-    #         self.assertEqual(neighbor_comparison(self.eiffel_puzzle, self.eiffel_puzzle_copy), 1)
-    #
-    #         # Case where the puzzle is not completely solved
-    #         self.assertEqual(neighbor_comparison(self.simple_puzzle, self.inferred_puzzle), 0.25)
+    def test_puzzle_neighbor_comparison(self):
+        for piece in self.eiffel_puzzle_copy.bag_of_pieces:
+            piece._is_placed=True
+        # Case where the puzzle is perfectly solved
+        self.assertEqual(neighbor_comparison(self.eiffel_puzzle, self.eiffel_puzzle_copy), 1)
+
+        # Case where the puzzle is not completely solved
+        self.assertEqual(neighbor_comparison(self.simple_puzzle, self.inferred_puzzle), 0.38)
 
 
 if __name__ == '__main__':
