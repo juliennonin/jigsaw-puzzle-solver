@@ -100,3 +100,22 @@ def pomeranz_CM(puzzle, p=2, q=1):
                 diss[i]=h(diss[i], quartiles[i])
 
     return np.array(CM)
+
+
+def BestBuddies_matrix(CM,diag=True):
+    '''Compute the Best Buddies matrix based on the compatibility matrix'''
+    if diag : 
+        for k in range(CM.shape[2]):
+            np.fill_diagonal(CM[:,:,k],0) # Put compatibility between same pieces at 0
+
+    #Initialize Best Buddies matrix
+    BB = np.zeros(CM.shape)
+
+    for i in range(CM.shape[0]):
+        for b in Border :
+            best_neighbour = np.argmax(CM[i,:,b.value])
+            if np.argmax(CM[best_neighbour,:,b.opposite.value]) == i:
+                BB[i,best_neighbour,b.value] = 1
+                #BB[best_neighbour,i,b.opposite.value] = 1
+
+    return BB
