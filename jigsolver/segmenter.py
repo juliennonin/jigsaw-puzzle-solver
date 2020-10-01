@@ -5,9 +5,10 @@ def find_segment(puzzle,segment,pos,BB):
     '''
     test if all neighbors of a piece are part of its segment, add them into the segment if so and recursively call the function
     '''
+    if isinstance(puzzle.board[pos[0],pos[1]],Slot): # If initial piece is empty -> return 
+        return segment
 
     for border,neighbor in puzzle.board.neighbors(pos[0],pos[1]): # Iter on each neighbor
-
         if (not isinstance(neighbor,Slot)) and (neighbor not in segment) and (BB[puzzle.board[pos[0],pos[1]].id,neighbor.id,border]) : ## If neighbor is a Piecen not already in segment and is best best buddies
             
             segment.append(neighbor) ## Add neighbor to segment
@@ -44,4 +45,4 @@ def remove_all_but_segment(puzzle,segment):
         for j in range(puzzle.shape[1]):
             if puzzle.board[i,j] not in segment:
                 puzzle.board[i,j]._is_placed = False
-                puzzle.board[i,j]=Slot(i+j)
+                puzzle.board[i,j]=Slot(i*puzzle.shape[0]+j)
