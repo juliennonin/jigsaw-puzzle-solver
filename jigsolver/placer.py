@@ -12,8 +12,8 @@ def greedy_placer(puzzle, compatibilites, display=False):
 
     def update_M(piece_id, slot_coords):
         ## Remove the placed piece and the filled slot from matrix M
-        M[piece_id] = 0
-        M[:, slot_coords[0], slot_coords[1]] = 0
+        M[piece_id] = -1
+        M[:, slot_coords[0], slot_coords[1]] = -1
 
         ## Update the scores (of all remaining pieces) for all neighboring slots
         for i, j in puzzle.board.adjacent_empty_slots(*slot_coords):  # fore each neighboring slot
@@ -22,12 +22,19 @@ def greedy_placer(puzzle, compatibilites, display=False):
                 scores = [compatibilites[piece.id, adjacent.id, position] for position, adjacent in adjacent_pieces]
                 M[piece.id, i, j] = sum(scores) / len(scores)
 
+    ## Init
+    n_pieces_remaining = len(list(puzzle.pieces_remaining))
+    if n_pieces_remaining == n_pieces:
+        M[0,n//2,m//2] = 1
+    
     ## Main loop: find the best piece-slot pair and place it
-    for _ in range(len(list(puzzle.pieces_remaining))):
+    for _ in range(n_pieces_remaining):
         piece_id, *coords = np.unravel_index(np.argmax(M), M.shape)
         piece = puzzle.bag_of_pieces[piece_id]
         puzzle.place(piece, coords)
         update_M(piece_id, coords)
+        if display:
+            puzzle.display()
 
 
 # %%

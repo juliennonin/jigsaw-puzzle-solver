@@ -81,7 +81,7 @@ class Slot():
 
     @property
     def picture(self):
-            return 255
+            return 0
 
 
 
