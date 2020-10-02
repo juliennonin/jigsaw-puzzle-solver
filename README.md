@@ -41,12 +41,14 @@ random_solver(puzzle,plotsteps=False)
 puzzle.display()
 ```
 
+Further examples can be found in the notebook "sandbox.ipynb"
 
 ## Todo 
 - [x] Implement Puzzle
 - [x] Add the Compatibility matrix
-- [ ] Implement Placer 
-- [ ] Implement Segmenter
+- [x] Implement Placer 
+- [x] Implement Segmenter
+- [ ] Implement Shifter
 
 
 ## References 

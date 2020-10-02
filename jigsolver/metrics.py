@@ -99,7 +99,27 @@ def pomeranz_CM(puzzle, p=2, q=1):
                 diss[i]=h(diss[i], quartiles[i])
 
     return np.array(CM)
+  
+  
+def BestBuddies_matrix(CM,diag=True):
+    '''Compute the Best Buddies matrix based on the compatibility matrix'''
+    if diag : 
+        for k in range(CM.shape[2]):
+            np.fill_diagonal(CM[:,:,k],0) # Put compatibility between same pieces at 0
 
+    #Initialize Best Buddies matrix
+    BB = np.zeros(CM.shape)
+
+    for i in range(CM.shape[0]):
+        for b in Border :
+            best_neighbour = np.argmax(CM[i,:,b.value])
+            if np.argmax(CM[best_neighbour,:,b.opposite.value]) == i:
+                BB[i,best_neighbour,b.value] = 1
+                #BB[best_neighbour,i,b.opposite.value] = 1
+
+    return BB
+
+  
 def simple_evaluation(ground_truth,solver_output):
     """Count the fraction of correct pieces in the solver's output"""
     assert (isinstance(ground_truth,Puzzle) and isinstance(solver_output,Puzzle)), 'The two input should be instances of Puzzle'
@@ -110,6 +130,7 @@ def simple_evaluation(ground_truth,solver_output):
 
     return np.mean([ground_truth.board[i,j] == solver_output.board[i,j] for i in range(n) for j in range(m)])
 
+ 
 def fraction_of_correct_neighbors(true_pos,ground_truth,solver_output):
     """For the piece located at the position pos in the solved puzzle, we compute the fraction of correct neighbors
     in the solver's output for this same piece"""

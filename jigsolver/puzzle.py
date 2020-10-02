@@ -185,6 +185,7 @@ class Puzzle():
         
         self.board[i,j] = piece
         piece._is_placed = True
+        piece.position = (i,j)
         for position, slot in self.board.neighbors(i, j):
             if isinstance(slot, Slot):
                 slot.available = True
