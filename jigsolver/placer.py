@@ -4,37 +4,65 @@ from copy import copy
 import matplotlib.pyplot as plt
 
 
-def greedy_placer(puzzle, compatibilites, display=False):
+def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
     n, m = puzzle.shape
     n_pieces = n * m
-    M = np.zeros((n_pieces, n, m)) 
-    ## M[p,i,j] is the avg compatibility if piece #p was placed at (i,j) in the board 
+    M = np.zeros((n, m, n_pieces)) 
+    ## M[i,j,p] is the avg compatibility if piece #p was placed at (i,j) in the board 
 
     def update_M(piece_id, slot_coords):
         ## Remove the placed piece and the filled slot from matrix M
-        M[piece_id] = -1
-        M[:, slot_coords[0], slot_coords[1]] = -1
+        M[:,:,piece_id] = -1
+        M[slot_coords[0], slot_coords[1]] = -1
 
         ## Update the scores (of all remaining pieces) for all neighboring slots
         for i, j in puzzle.board.adjacent_empty_slots(*slot_coords):  # fore each neighboring slot
             adjacent_pieces = [(position, piece) for position, piece in puzzle.board.neighbors(i,j) if isinstance(piece, Piece)]
             for piece in puzzle.pieces_remaining:
                 scores = [compatibilites[piece.id, adjacent.id, position] for position, adjacent in adjacent_pieces]
-                M[piece.id, i, j] = sum(scores) / len(scores)
+                M[i, j, piece.id] = sum(scores) / len(scores)
+
+    def border_is_empty(M, border):
+        return np.all(M[border.slice] <= 0) and np.any(M[border.slice] != -1)
+
+    def roll(M, i, j):
+        """Move the puzzle  (and the score matrix M) if a border is reached"""
+        new_i, new_j = i, j
+        if i == 0 and border_is_empty(M, Border.BOTTOM):
+            puzzle.board._grid = np.roll(puzzle.board._grid, 1, axis=0)
+            M = np.roll(M, 1, axis=0)
+            new_i = 1
+        elif i == n - 1 and border_is_empty(M, Border.TOP):
+            puzzle.board._grid = np.roll(puzzle.board._grid, -1, axis=0)
+            M = np.roll(M, -1, axis=0)
+            new_i = n - 2
+
+        if j == 0 and border_is_empty(M, Border.RIGHT):
+            puzzle.board._grid = np.roll(puzzle.board._grid, 1, axis=1)
+            M = np.roll(M, 1, axis=1)
+            new_j = 1
+        elif j == m - 1 and border_is_empty(M, Border.LEFT):
+            puzzle.board._grid = np.roll(puzzle.board._grid, -1, axis=1)
+            M = np.roll(M, -1, axis=1)
+            new_j = m - 2
+        return new_i, new_j, M
 
     ## Init
     n_pieces_remaining = len(list(puzzle.pieces_remaining))
     if n_pieces_remaining == n_pieces:
-        M[0,n//2,m//2] = 1
+        M[n//2, m//2, 0] = 1
     
     ## Main loop: find the best piece-slot pair and place it
     for _ in range(n_pieces_remaining):
-        piece_id, *coords = np.unravel_index(np.argmax(M), M.shape)
+        *coords, piece_id = np.unravel_index(np.argmax(M), M.shape)
         piece = puzzle.bag_of_pieces[piece_id]
         puzzle.place(piece, coords)
+        if rolling:
+            *coords, M = roll(M, *coords)
         update_M(piece_id, coords)
         if display:
             puzzle.display()
+            # plt.imshow(np.mean(M, axis=2))
 
 
 # %%
