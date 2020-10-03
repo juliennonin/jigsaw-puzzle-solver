@@ -16,7 +16,7 @@ See also [commit naming conventions](docs/CONTRIBUTING.md)
 To install the requirements, do the following command :
 
 ```python
-pip install -r requirements.py
+pip install -r requirements.txt
 ```
 
 ## How to use
@@ -37,7 +37,7 @@ puzzle.display()
 puzzle.shuffle()
 
 # Solve the Puzzle (randomly for now)
-random_solver(puzzle,plotsteps=False)
+jigsolver.random_solver(puzzle,plotsteps=False)
 puzzle.display()
 ```
 
