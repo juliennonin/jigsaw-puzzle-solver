@@ -8,7 +8,6 @@ Consider starting the commit message with the following "types" (should be place
 * **[_Nothing_]**: 
 * **Add or Feat**: Adding a modification or a new feature
 * **Fix**: a bug fix or fixing test
-* **Fix #[issue]**: fix an issue reported on GitHub
 * **Test**: adding of new tests
 * **Clean**: (re)move some files / folders
 * **Refactor**: refactoring code
