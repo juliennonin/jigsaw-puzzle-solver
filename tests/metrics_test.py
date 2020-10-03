@@ -1,6 +1,5 @@
 import unittest
-from jigsolver import cho_CM,pomeranz_CM,BestBuddies_matrix
-from jigsolver import puzzle
+from jigsolver.pomeranz_solver.segmenter import BestBuddies_matrix
 import numpy as np
 
 class BorderTestCase(unittest.TestCase):
@@ -23,7 +22,7 @@ class BorderTestCase(unittest.TestCase):
 
         BB = BestBuddies_matrix(cm)
 
-        self.assertTrue( (BB== np.zeros((3,3,4))).all() )
+        self.assertTrue((BB== np.zeros((3,3,4))).all())
 
 
 
