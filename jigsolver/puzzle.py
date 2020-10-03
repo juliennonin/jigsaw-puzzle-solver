@@ -168,36 +168,36 @@ class Puzzle():
         assert not(nb_pieces and nb_rows_and_columns), "You can't create your puzzle specifying at the same time " \
                                                        "its number of pieces, its number of rows and its number of columns. Make a choice"
 
+
         np.random.seed(self.seed)  # for reproducibility
 
-
+        #default behaviour
         height, width, _ = img.shape
-        ps = self.patch_size
+        ps=self.patch_size
         n_rows,n_columns= height//ps,width//ps
 
         #** If the user has specified a number of pieces**
 
         if nb_pieces:
+            assert nb_pieces != 2, "Come on, this isn't really a puzzle"
+            assert nb_pieces <= 300, "This is too complex"
             #We check if the number of pieces given is a prime number
             nb_final_pieces=nb_pieces if findtwoFactors(nb_pieces) else nb_pieces+1
             n_rows,n_columns=findtwoFactors(nb_final_pieces)
 
-            while ((height // ps < n_rows) or (width // ps < n_columns)):
-                ps -= 1
-                assert ps != 0, 'This puzzle is too complex. Make it simpler'
+            ps = min(height // n_rows, width // n_columns)
 
             if nb_pieces!=nb_final_pieces:
                 print(f"I can't perfectly cut your puzzle into {nb_pieces} squared pieces. Instead, I cutted it into {nb_final_pieces} pieces")
 
-            self.patch_size=ps
 
         #** If the user has specified a number of rows and columns**
 
         if (nb_rows_and_columns):
+            assert nb_rows_and_columns[0] >= 3 and nb_rows_and_columns[1] >= 3, "Come on, this isn't really a puzzle"
+            assert nb_rows_and_columns[0] <= 100 and nb_rows_and_columns[1] <= 100, "This is too complex"
             n_rows,n_columns = nb_rows_and_columns
-            while ((height // ps < n_rows) or (width // ps < n_columns)):
-                ps -= 10
-                assert ps != 0, 'This puzzle is too complex. Make it simpler'
+            ps = min(height // n_rows, width // n_columns)
 
 
         self.patch_size=ps
