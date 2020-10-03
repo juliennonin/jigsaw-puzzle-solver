@@ -1,5 +1,30 @@
-from .puzzle import Piece,Puzzle,Board,Border,Slot
+from jigsolver.puzzle import Slot,Border
 import numpy as np
+
+'''
+The role of the segmenter is to identify sets of pieces for which it seems that they are well matched.
+When this is done, following the idea of Pomeranz, we kept the segment with the highest size in the board 
+and, we restart to place the pieces with this new configuration.
+'''
+
+def BestBuddies_matrix(CM,diag=True):
+    '''Compute the Best Buddies matrix based on the compatibility matrix'''
+    if diag :
+        for k in range(CM.shape[2]):
+            np.fill_diagonal(CM[:,:,k],0) # Put compatibility between same pieces at 0
+
+    #Initialize Best Buddies matrix
+    BB = np.zeros(CM.shape)
+
+    for i in range(CM.shape[0]):
+        for b in Border :
+            best_neighbour = np.argmax(CM[i,:,b.value])
+            if np.argmax(CM[best_neighbour,:,b.opposite.value]) == i:
+                BB[i,best_neighbour,b.value] = 1
+                #BB[best_neighbour,i,b.opposite.value] = 1
+
+    return BB
+
 
 def find_segment(puzzle,segment,pos,BB):
     '''

@@ -1,5 +1,4 @@
-import numpy as np
-from .puzzle import Piece,Slot
+# Here, we propose to implement a very stupid solver which is solving the puzzle just by shuffling randomly the pieces.
 
 def random_solver(puzzle,plotsteps=True):
     '''Solve a puzzle randomly'''

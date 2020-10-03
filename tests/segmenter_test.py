@@ -1,7 +1,7 @@
 import unittest
-from jigsolver import Puzzle, Board,Piece
-from jigsolver.segmenter import segmenter,find_segment
-from jigsolver.metrics import pomeranz_CM,BestBuddies_matrix
+from jigsolver import Puzzle
+from jigsolver.pomeranz_solver.segmenter import BestBuddies_matrix,segmenter,find_segment
+from jigsolver.metrics import pomeranz_CM
 import numpy as np
 from copy import copy
 

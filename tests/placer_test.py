@@ -1,13 +1,11 @@
 import unittest
 from jigsolver import Puzzle
-from jigsolver.placer import available_positions
-import numpy as np
-from copy import copy
+from jigsolver.pomeranz_solver.placer import available_positions
 import matplotlib.pyplot as plt
 
 class PlacePieceTestCase(unittest.TestCase):
     def setUp(self):
-        img = plt.imread('tests/img/peppers.png')[:,:,:3]
+        img = plt.imread('img/peppers.png')[:,:,:3]
         self.puzzle = Puzzle(patch_size=28)
         self.puzzle.create_from_img(img)
         self.puzzle.shuffle()

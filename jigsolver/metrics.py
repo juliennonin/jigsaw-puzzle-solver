@@ -1,6 +1,22 @@
 from jigsolver.puzzle import Border,Puzzle
 import numpy as np
 
+'''
+This library contains metrics useful for different purposes.
+
+Firstly, we have metrics which enable to judge if two pieces are compatible relatively to a border.
+They are called 'compatibility metrics' (CM) and are useful for choosing how to place the pieces in the board.
+Concretely, we store them using matrix of dimension (n,n,4).
+For instance, CM[i,j,Border.Left] means that we are trying 
+to access to the compatibility between the i-th Piece and the j-th Piece when the j-th Piece is placed to the left of 
+the i-th Piece.
+
+There are several ways to choose compatibility metrics and here we've tested a few of them based on our intuition and
+paper we have read.
+
+Then, we have also performance metrics enable to assess the solving quality for different solvers.
+
+'''
 
 def dissimilarity(piece1, piece2, p=2, q=1, lab_space=False):
     """Return the dissimilarities between the current Piece and the other for the four sides"""
@@ -100,24 +116,6 @@ def pomeranz_CM(puzzle, p=2, q=1):
 
     return np.array(CM)
   
-  
-def BestBuddies_matrix(CM,diag=True):
-    '''Compute the Best Buddies matrix based on the compatibility matrix'''
-    if diag : 
-        for k in range(CM.shape[2]):
-            np.fill_diagonal(CM[:,:,k],0) # Put compatibility between same pieces at 0
-
-    #Initialize Best Buddies matrix
-    BB = np.zeros(CM.shape)
-
-    for i in range(CM.shape[0]):
-        for b in Border :
-            best_neighbour = np.argmax(CM[i,:,b.value])
-            if np.argmax(CM[best_neighbour,:,b.opposite.value]) == i:
-                BB[i,best_neighbour,b.value] = 1
-                #BB[best_neighbour,i,b.opposite.value] = 1
-
-    return BB
 
   
 def simple_evaluation(ground_truth,solver_output):

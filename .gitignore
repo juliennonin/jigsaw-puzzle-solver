@@ -13,7 +13,7 @@ tests/test_placer_temporary.py
 *.code-workspace
 
 ### Python ###
-__pychache__/
+__pycache__/
 */__pycache__
 
 ### JupyterNotebooks ###

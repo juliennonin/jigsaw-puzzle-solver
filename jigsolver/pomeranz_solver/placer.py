@@ -1,8 +1,11 @@
-from .puzzle import *
+from jigsolver.puzzle import *
 import numpy as np
-from copy import copy
-import matplotlib.pyplot as plt
 
+'''
+The role of the placer is simply to place the remaining pieces from the bag of pieces into the board.
+His role is ended when all the pieces are placed on the board.
+
+'''
 
 def naiv_greedy_placer(puzzle, compatibilities, display=False):
     n_pieces = len(list(puzzle.pieces_remaining))

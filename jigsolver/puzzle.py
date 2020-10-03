@@ -5,6 +5,12 @@ from enum import Enum
 from copy import copy, deepcopy
 from skimage import io, color
 
+'''
+Here we define the way we see a Puzzle. Many classes are defined in this file and are useful for any solvers.
+We invite you to explore the classes so that you can get a better understanding of our code.
+
+'''
+
 class Border(Enum):
     def __new__(cls, value, slice):
         obj = object.__new__(cls)
