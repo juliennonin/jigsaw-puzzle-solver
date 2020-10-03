@@ -8,7 +8,12 @@ and, we restart to place the pieces with this new configuration.
 '''
 
 def BestBuddies_matrix(CM,diag=True):
-    '''Compute the Best Buddies matrix based on the compatibility matrix'''
+    '''
+    Compute the Best Buddies matrix based on the compatibility matrix
+    @CM: compatibility matrix
+    return
+    @BB: Best Buddies matrix which set the best buddy pieces (have the best compatibility in the compatibility matrix) to 1.
+    '''
     if diag :
         for k in range(CM.shape[2]):
             np.fill_diagonal(CM[:,:,k],0) # Put compatibility between same pieces at 0
@@ -29,6 +34,10 @@ def BestBuddies_matrix(CM,diag=True):
 def find_segment(puzzle,segment,pos,BB):
     '''
     test if all neighbors of a piece are part of its segment, add them into the segment if so and recursively call the function
+    @BB: Best Buddies matrix which set the best buddy pieces (have the best compatibility in the compatibility matrix) to 1.
+    @pos: the position to start looking for base on BB
+    Return
+    @segment: segment found
     '''
     if isinstance(puzzle.board[pos[0],pos[1]],Slot): # If initial piece is empty -> return 
         return segment
@@ -42,7 +51,14 @@ def find_segment(puzzle,segment,pos,BB):
 
 
 def segmenter(puzzle,BB,n_iter=False):
-    '''Find the biggest segment of the Puzzle'''
+    '''
+    Find the biggest segment of the Puzzle
+    @BB: Best Buddies matrix which set the best buddy pieces (have the best compatibility in the compatibility matrix) to 1.
+    @n_iter: iterate n_iter times to find biggest segment, set n_iter to make it dependant of size of the board
+    Return
+    @biggest_segment: Biggest segment found in puzzle
+    '''
+
 
     segments = [] # list of segments 
 
@@ -65,7 +81,10 @@ def segmenter(puzzle,BB,n_iter=False):
     return biggest_segment
 
 def remove_all_but_segment(puzzle,segment):
-    ''' Remove all Pieces from board exect those in the segment '''
+    ''' 
+    Remove all Pieces from board exect those in the segment 
+    @segment: segement keep in the board (normally keep the biggest segment)
+    '''
     for i in range(puzzle.shape[0]):
         for j in range(puzzle.shape[1]):
             if puzzle.board[i,j] not in segment:

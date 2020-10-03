@@ -265,6 +265,13 @@ class Puzzle():
         plt.show()
 
     def find_position(self,id):
+        '''
+        find the position of the piece with given id 
+        @id: given id
+        Return
+        @(i,j): position of the piece with given id
+        '''
+
         assert self.board, 'A board must be created'
         assert not(self.pieces_remaining), 'All the pieces must be placed to call this function'
         assert (id in [piece.id for piece in self.bag_of_pieces]), 'The id provided should correspond to the id of ' \
@@ -283,6 +290,7 @@ class Puzzle():
 
 
     def __copy__(self):
+        " copy the current puzzle "
         new_puzzle = Puzzle(self.patch_size)
         new_puzzle.bag_of_pieces = copy(self.bag_of_pieces)
         new_puzzle.board = deepcopy(self.board)

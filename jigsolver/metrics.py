@@ -19,8 +19,14 @@ Then, we have also performance metrics enable to assess the solving quality for 
 '''
 
 def dissimilarity(piece1, piece2, p=2, q=1, lab_space=False):
-    """Return the dissimilarities between the current Piece and the other for the four sides"""
-    piece1 = piece1.rgb_to_lab() if lab_space else piece1
+    """
+    Return the dissimilarities between the current Piece and the other for the four sides
+    @piece1,piece2: two pieces to compute dissimilarity
+    @p,q: To set up the dissimilarity value is compute by L_(p,q) norms of difference between two pieces
+    @lab_space: To set up the dissimilarity value is compute by Lab or RGB color space
+
+    """
+    piece1 = piece1.rgb_to_lab() if lab_space else piece1 
     piece2 = piece2.rgb_to_lab() if lab_space else piece2
 
     diss = [0] * len(Border)
@@ -72,7 +78,10 @@ def cho_CM(puzzle):
 
 
 def pomeranz_CM(puzzle, p=2, q=1):
-    """Set the compatibility matrix associated to our current puzzle - Pomeranz paper"""
+    """Set the compatibility matrix associated to our current puzzle - Pomeranz paper
+    @p,q: To set up the dissimilarity value is compute by L_(p,q) norms of difference between two pieces
+    """
+    
 
     assert puzzle.bag_of_pieces, "A puzzle should be created"
 
@@ -119,7 +128,15 @@ def pomeranz_CM(puzzle, p=2, q=1):
 
   
 def simple_evaluation(ground_truth,solver_output):
-    """Count the fraction of correct pieces in the solver's output"""
+    """
+    Compare the correct position/arrangement of pieces with the arrangement of the output of the solver
+    Count the fraction of correct pieces in the solver's output
+    @ground_truth: The puzzle in right position/arrangement or the answer of the puzzle
+    @solver_output: The position/arrangement of the output of the solver
+    Return
+    The right arrangement should return 1, means all pieces in the board are placed correctly
+    """
+
     assert (isinstance(ground_truth,Puzzle) and isinstance(solver_output,Puzzle)), 'The two input should be instances of Puzzle'
     assert (ground_truth.board.shape==solver_output.board.shape), "You can't compare two inputs of different shape"
     assert (ground_truth.board and solver_output.board), "At least one input has no Board"
@@ -130,8 +147,15 @@ def simple_evaluation(ground_truth,solver_output):
 
  
 def fraction_of_correct_neighbors(true_pos,ground_truth,solver_output):
-    """For the piece located at the position pos in the solved puzzle, we compute the fraction of correct neighbors
-    in the solver's output for this same piece"""
+    """
+    For the piece located at the position pos in the solved puzzle, we compute the fraction of correct neighbors
+    in the solver's output for this same piece
+    @true_pos: position of piece given, to compare if it has right neighbors
+    @ground_truth: The puzzle in right position/arrangement or the answer of the puzzle
+    @solver_output: The position/arrangement of the output of the solver
+    Return
+    The right arrangement should return 1, means all neighbors of the given position are correct
+    """
 
     assert isinstance(ground_truth, Puzzle) and isinstance(solver_output,Puzzle), 'The two input should be instances of Puzzle'
     assert (ground_truth.board.shape == solver_output.board.shape), "You can't compare two inputs of different shape"
@@ -166,7 +190,12 @@ def fraction_of_correct_neighbors(true_pos,ground_truth,solver_output):
     return np.round((nb_neigbors-nb_incorrect_neighbors)/nb_neigbors,2)
 
 def neighbor_comparison(ground_truth,solver_output):
-    """Return the average fraction of correct neighbors - Cho Paper"""
+    """
+    Return the average fraction of correct neighbors - Cho Paper
+    @ground_truth: The puzzle in right position/arrangement or the answer of the puzzle
+    @solver_output: The position/arrangement of the output of the solver
+    """
+
     assert isinstance(ground_truth, Puzzle) and isinstance(solver_output,Puzzle), 'The two input should be instances of Puzzle'
     assert (ground_truth.board.shape == solver_output.board.shape), "You can't compare two inputs of different shape"
     assert (ground_truth.board and solver_output.board), "At least one input has no Board"

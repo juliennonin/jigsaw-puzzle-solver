@@ -1,7 +1,10 @@
 # Here, we propose to implement a very stupid solver which is solving the puzzle just by shuffling randomly the pieces.
 
 def random_solver(puzzle,plotsteps=True):
-    '''Solve a puzzle randomly'''
+    '''
+    Solve a puzzle randomly
+    @plotsteps: set up if it will plot the process step by step
+    '''
 
     # Random solver
     np.random.shuffle(puzzle.bag_of_pieces)

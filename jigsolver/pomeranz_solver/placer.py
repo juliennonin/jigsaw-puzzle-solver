@@ -8,6 +8,12 @@ His role is ended when all the pieces are placed on the board.
 '''
 
 def naiv_greedy_placer(puzzle, compatibilities, display=False):
+    ''' 
+    Place the pieces in greedy way 
+    @compatibilities: compatibility matrix
+    @display: set up if it will display the process of place step by step
+
+    '''
     n_pieces = len(list(puzzle.pieces_remaining))
     
     ## INIT: no piece
@@ -25,6 +31,10 @@ def naiv_greedy_placer(puzzle, compatibilities, display=False):
 
 
 def decide_piece_to_add(puzzle, compatibilities):
+    '''
+    Find the best piece to add to best position in curent puzzle (means have the best compatibility)
+    @compatibilities: compatibility matrix
+    '''
     positions = list(available_positions(puzzle))
     assert len(positions) != 0, "No empty slot left!"
     best_value = -1
@@ -40,6 +50,11 @@ def decide_piece_to_add(puzzle, compatibilities):
 
 
 def find_best_piece_for_slot(puzzle, slot_coord, compatibilities):
+    '''
+    Find the best piece to add to one designated slot (best means have the highest compatibility)
+    @slot_coord: position of the designated slot
+    @compatibilities: compatibility matrix
+    '''
     best_diss_value = -1
     best_piece = None
 
