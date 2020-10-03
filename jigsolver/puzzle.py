@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
 from enum import Enum
 from copy import copy, deepcopy
 from skimage import io, color
@@ -10,6 +9,16 @@ Here we define the way we see a Puzzle. Many classes are defined in this file an
 We invite you to explore the classes so that you can get a better understanding of our code.
 
 '''
+
+def findtwoFactors(n):
+    "Compute two factors of an integer n enabling to cut a dimension into two"
+
+    factors=[]
+    for i in range(2,int(np.sqrt(n))+1):
+        if n%i==0:
+            factors.append(i)
+
+    return (factors[-1],n//factors[-1]) if factors else False
 
 class Border(Enum):
     def __new__(cls, value, slice):
@@ -130,6 +139,10 @@ class Piece():
 
 class Puzzle():
     def __init__(self, patch_size=100, seed=0):
+        '''@patch_size : The size of the pieces wanted by the user
+           | Ex : I want to cut an image into pieces of size 100x100 pixels"
+        '''
+
         self.patch_size = patch_size
         self.seed = seed
         self.bag_of_pieces = []
@@ -150,14 +163,47 @@ class Puzzle():
         return [piece for piece in self.bag_of_pieces if not piece.is_placed]
         #≡ return filter(lambda piece: not piece.is_placed, self.bag_of_pieces)
 
-    def create_from_img(self, img):
+    def create_from_img(self, img,nb_pieces=False,nb_rows_and_columns=False):
         '''Create the pieces from an img and put them in the board'''
+        assert not(nb_pieces and nb_rows_and_columns), "You can't create your puzzle specifying at the same time " \
+                                                       "its number of pieces, its number of rows and its number of columns. Make a choice"
+
         np.random.seed(self.seed)  # for reproducibility
 
-        ## Crop the image for its size to be a multiple of the patch size
+
         height, width, _ = img.shape
         ps = self.patch_size
-        n_rows, n_columns = height // ps, width // ps
+        n_rows,n_columns= height//ps,width//ps
+
+        #** If the user has specified a number of pieces**
+
+        if nb_pieces:
+            #We check if the number of pieces given is a prime number
+            nb_final_pieces=nb_pieces if findtwoFactors(nb_pieces) else nb_pieces+1
+            n_rows,n_columns=findtwoFactors(nb_final_pieces)
+
+            while ((height // ps < n_rows) or (width // ps < n_columns)):
+                ps -= 1
+                assert ps != 0, 'This puzzle is too complex. Make it simpler'
+
+            if nb_pieces!=nb_final_pieces:
+                print(f"I can't perfectly cut your puzzle into {nb_pieces} squared pieces. Instead, I cutted it into {nb_final_pieces} pieces")
+
+            self.patch_size=ps
+
+        #** If the user has specified a number of rows and columns**
+
+        if (nb_rows_and_columns):
+            n_rows,n_columns = nb_rows_and_columns
+            while ((height // ps < n_rows) or (width // ps < n_columns)):
+                ps -= 10
+                assert ps != 0, 'This puzzle is too complex. Make it simpler'
+
+
+        self.patch_size=ps
+
+
+        ## Crop the image for its size to be a multiple of the patch size
         img_cropped = img[:n_rows * ps, :n_columns * ps]
     
         ## Populate the board

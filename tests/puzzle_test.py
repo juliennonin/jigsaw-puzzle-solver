@@ -58,6 +58,15 @@ class PuzzleTestCase(unittest.TestCase):
     def test_puzzle_create_piece_size(self):
         self.assertEqual(self.eiffel_puzzle.board[0,0].size, 100)
 
+        self.eiffel_puzzle.create_from_img(self.img,nb_pieces=28)
+        nb_pieces_height=self.eiffel_puzzle.shape[0]//self.eiffel_puzzle.patch_size
+        nb_pieces_width=self.eiffel_puzzle.shape[1]//self.eiffel_puzzle.patch_size
+
+        self.assertEqual(nb_pieces_height*nb_pieces_width,28)
+
+        self.eiffel_puzzle.create_from_img(self.img, nb_rows_and_columns=(6,7))
+        self.assertEqual(self.eiffel_puzzle.shape,(6,7))
+
     def test_create_puzzle_crop_test(self):
         self.assertEqual(self.puzzle.shape,(4,4))
 
