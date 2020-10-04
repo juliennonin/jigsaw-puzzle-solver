@@ -13,12 +13,11 @@ We invite you to explore the classes so that you can get a better understanding 
 def findtwoFactors(n):
     "Compute two factors of an integer n enabling to cut a dimension into two"
 
-    factors=[]
-    for i in range(2,int(np.sqrt(n))+1):
+    for i in range(int(np.sqrt(n))+1,1,-1):
         if n%i==0:
-            factors.append(i)
+            return [i,n//i]
 
-    return (factors[-1],n//factors[-1]) if factors else False
+    return False
 
 class Border(Enum):
     def __new__(cls, value, slice):
