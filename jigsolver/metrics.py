@@ -46,7 +46,7 @@ def cho_CM(puzzle,lab_space=False):
 
     N = len(puzzle.bag_of_pieces)
 
-    assert N>=10, f"There are only {N} pieces and you call that a puzzle ??"
+    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
 
     CM = np.zeros((N, N, 4))
 
@@ -79,7 +79,7 @@ def pomeranz_CM(puzzle, p=2, q=1,lab_space=False):
 
     assert puzzle.bag_of_pieces, "A puzzle should be created"
     N=len(puzzle.bag_of_pieces)
-    assert N>=10, f"There are only {N} pieces and you call that a puzzle ??"
+    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
 
     CM=np.zeros((N,N,4))
 
