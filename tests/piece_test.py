@@ -5,7 +5,20 @@ from jigsolver.metrics import dissimilarity
 
 class PieceTestCase(unittest.TestCase):
     def setUp(self):
-        pass
+        # creating very simple pieces
+        A = np.zeros((2, 2, 3)).astype(int)
+        B = A.copy()
+
+        A[:, 0] = 1
+        A[:, 1] = 2
+        A = Piece(A)
+
+        B[:, 0] = 5
+        B[:, 1] = 1
+        B = Piece(B)
+
+        self.A=A
+        self.B=B
 
     def test_piece_size_should_return_size(self):
         picture = np.array([
@@ -32,17 +45,6 @@ class PieceTestCase(unittest.TestCase):
             piece = Piece(picture, 0)
 
     def test_piece_dissimilarity(self):
-        #creating very simple pieces
-        A = np.zeros((2, 2, 3)).astype(int)
-        B = A.copy()
-
-        A[:, 0] = 1
-        A[:, 1] = 2
-        A=Piece(A)
-
-        B[:, 0] = 5
-        B[:, 1] = 1
-        B=Piece(B)
 
         diss = [0] * len(Border)
         diss[Border.TOP.value] = 51
@@ -50,11 +52,16 @@ class PieceTestCase(unittest.TestCase):
         diss[Border.RIGHT.value] = 54
         diss[Border.LEFT.value] = 0
 
-        self.assertListEqual(dissimilarity(A, B), diss)
+        #Testing of the symetry
+
+        self.assertListEqual(dissimilarity(self.A, self.B), diss)
 
         diss[Border.TOP.value], diss[Border.BOTTOM.value] = diss[Border.BOTTOM.value], diss[Border.TOP.value]
         diss[Border.LEFT.value], diss[Border.RIGHT.value] = diss[Border.RIGHT.value], diss[Border.LEFT.value]
-        self.assertListEqual(dissimilarity(B, A), diss)
+
+        self.assertListEqual(dissimilarity(self.B, self.A), diss)
+
+
 
 
 if __name__ == '__main__':

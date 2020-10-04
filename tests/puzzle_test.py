@@ -1,8 +1,8 @@
 import unittest
 from jigsolver import Board, Border, Piece, Puzzle, Slot
-from jigsolver.metrics import cho_CM, pomeranz_CM
+from jigsolver.metrics import *
 import numpy as np
-from copy import copy
+from copy import copy,deepcopy
 import matplotlib.pyplot as plt
 
 class PuzzleTestCase(unittest.TestCase):
@@ -15,6 +15,45 @@ class PuzzleTestCase(unittest.TestCase):
         img_real = plt.imread('img/eiffel.jpg')
         self.eiffel_puzzle = Puzzle(patch_size=100)
         self.eiffel_puzzle.create_from_img(img_real)
+        self.eiffel_puzzle_copy = copy(self.eiffel_puzzle)
+
+        # creating a very simple puzzle
+        A = np.zeros((2, 2, 3)).astype(int)
+        B = A.copy()
+        C = B.copy()
+
+
+        A[:, 0] = 5
+        A[:, 1] = 1
+        A = Piece(A, 0)
+
+        B[:, 0] = 1
+        B[:, 1] = 2
+        B = Piece(B, 1)
+
+        C[:, 0] = 20
+        C[:, 1] = 50
+        C = Piece(C, 2)
+
+        D=B.copy()
+
+        P = Puzzle(patch_size=2)
+        P.bag_of_pieces = [A, B, C, D]
+
+        P_board = Board(1, 4)
+        P.board=P_board
+        P.place(A,(0,0))
+        P.place(B,(0,1))
+        P.place(C,(0,2))
+        P.place(D,(0,3))
+
+        Q=deepcopy(P)
+        Q.board[0,0]=B
+        Q.board[0,1]=A
+
+
+        self.simple_puzzle=P
+        self.inferred_puzzle=Q
     
     def test_puzzle_create_piece_size(self):
         self.assertEqual(self.eiffel_puzzle.board[0,0].size, 100)
@@ -45,60 +84,53 @@ class PuzzleTestCase(unittest.TestCase):
 
 
     def test_puzzle_copy_real_img(self):
-        self.eiffel_puzzle_copy = copy(self.eiffel_puzzle)
         self.eiffel_puzzle.shuffle()
         self.assertNotEqual(self.eiffel_puzzle.bag_of_pieces,self.eiffel_puzzle_copy.bag_of_pieces)
         self.assertNotEqual(self.eiffel_puzzle.board,self.eiffel_puzzle_copy.board)
 
-    def test_piece_compatibility_matrix_cho(self):
-            P = Puzzle(patch_size=2)
+    def test_puzzle_compatibility_matrix_cho(self):
+        CM = cho_CM(self.simple_puzzle)
 
-            # creating very simple pieces
-            A = np.zeros((2, 2, 3)).astype(int)
-            B = A.copy()
+        # these two pieces should have a perfect compatibility for one side
+        # (left of right depending of the piece considered as a reference)
 
-            A[:, 0] = 1
-            A[:, 1] = 2
-            A = Piece(A)
+        self.assertEqual(CM[0, 1, Border.RIGHT.value], 1)
+        self.assertEqual(CM[1, 0, Border.LEFT.value], 1)
 
-            B[:, 0] = 5
-            B[:, 1] = 1
-            B = Piece(B)
+    def test_puzzle_compatibility_matrix_pomeranz(self):
+        CM = pomeranz_CM(self.simple_puzzle)
 
-            P.bag_of_pieces = [A, B]
+        # these two pieces should have a perfect compatibility for one side
+        # (left of right depending of the piece considered as a reference)
 
-            CM = cho_CM(P)
+        self.assertEqual(CM[0, 1, Border.RIGHT.value], 1)
+        self.assertEqual(CM[1, 0, Border.LEFT.value], 1)
 
-            #these two pieces should have a perfect compatibility for one side
-            # (left of right depending of the piece considered as a reference)
 
-            self.assertEqual(CM[0, 1, Border.LEFT.value], 1)
-            self.assertEqual(CM[1, 0, Border.RIGHT.value], 1)
+    def test_puzzle_simple_evaluation(self):
+        # Case where the puzzle is perfectly solved
+        self.assertEqual(simple_evaluation(self.eiffel_puzzle,self.eiffel_puzzle_copy),1)
 
-    def test_piece_compatibility_matrix_pomeranz(self):
-            P = Puzzle(patch_size=2)
+        #Case where the puzzle is completely not solved
+        self.assertEqual(simple_evaluation(self.simple_puzzle,self.inferred_puzzle),0.5)
 
-            # creating very simple pieces
-            A = np.zeros((2, 2, 3)).astype(int)
-            B = A.copy()
 
-            A[:, 0] = 1
-            A[:, 1] = 2
-            A = Piece(A, 0)
+    def test_puzzle_fraction_of_correct_neighbors(self):
+        self.assertEqual(fraction_of_correct_neighbors((0, 0), self.simple_puzzle, self.inferred_puzzle), 0)
+        self.assertEqual(fraction_of_correct_neighbors((0, 1), self.simple_puzzle, self.inferred_puzzle), 0)
+        self.assertEqual(fraction_of_correct_neighbors((0,2),self.simple_puzzle,self.inferred_puzzle), 0.5)
+        self.assertEqual(fraction_of_correct_neighbors((0, 3), self.simple_puzzle, self.inferred_puzzle), 1)
 
-            B[:, 0] = 5
-            B[:, 1] = 1
-            B = Piece(B, 1)
 
-            P.bag_of_pieces = [A, B]
+    def test_puzzle_neighbor_comparison(self):
+        for piece in self.eiffel_puzzle_copy.bag_of_pieces:
+            piece._is_placed=True
+        # Case where the puzzle is perfectly solved
+        self.assertEqual(neighbor_comparison(self.eiffel_puzzle, self.eiffel_puzzle_copy), 1)
 
-            CM = pomeranz_CM(P)
-         
-            #these two pieces should have a perfect compatibility for one side
-            # (left of right depending of the piece considered as a reference)
+        # Case where the puzzle is not completely solved
+        self.assertEqual(neighbor_comparison(self.simple_puzzle, self.inferred_puzzle), 0.38)
 
-            self.assertEqual(CM[0, 1, Border.LEFT.value],1)
-            self.assertEqual(CM[1, 0, Border.RIGHT.value], 1)
 
 if __name__ == '__main__':
     unittest.main()

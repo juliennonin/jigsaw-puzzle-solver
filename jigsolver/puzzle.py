@@ -120,10 +120,13 @@ class Piece():
     def _clean(self):
         self._is_placed = False
 
-    # def __eq__(self, other):
-    #     if isinstance(other, Piece):
-    #         return np.allclose(self.picture, other.picture)
-    #     return False
+    def __eq__(self, other):
+        if isinstance(other, Piece):
+            return np.allclose(self.picture, other.picture)
+        return False
+
+    def copy(self):
+        return Piece(self.picture.copy())
 
 
 class Puzzle():
@@ -189,6 +192,7 @@ class Puzzle():
         
         self.board[i,j] = piece
         piece._is_placed = True
+        piece.position = (i,j)
         for position, slot in self.board.neighbors(i, j):
             if isinstance(slot, Slot):
                 slot.available = True
@@ -214,6 +218,17 @@ class Puzzle():
     
         plt.imshow(puzzle_plot)
         plt.show()
+
+    def find_position(self,id):
+        assert self.board, 'A board must be created'
+        assert not(self.pieces_remaining), 'All the pieces must be placed to call this function'
+        assert (id in [piece.id for piece in self.bag_of_pieces]), 'The id provided should correspond to the id of ' \
+                                                                   'a Piece in the Puzzle !'
+        n,m = self.shape
+        for i in range(n):
+            for j in range(m):
+                if (self.board[i,j].id==id):
+                    return (i,j)
 
     def clean(self):
         "clean the current puzzle | Restart the party"
