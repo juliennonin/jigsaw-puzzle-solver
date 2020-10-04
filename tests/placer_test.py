@@ -1,6 +1,5 @@
 import unittest
 from jigsolver import Puzzle
-from jigsolver.pomeranz_solver.placer import available_positions
 import matplotlib.pyplot as plt
 
 class PlacePieceTestCase(unittest.TestCase):
@@ -29,17 +28,18 @@ class PlacePieceTestCase(unittest.TestCase):
             piece2 = self.puzzle.bag_of_pieces[4]
             self.puzzle.place(piece, (2, 2))
 
-    def test_place_pieces_should_update_available_slots(self):
-        piece = self.puzzle.bag_of_pieces[1]
-        self.puzzle.place(piece, (1, 1))
-        piece = self.puzzle.bag_of_pieces[2]
-        self.puzzle.place(piece, (1, 2))
-        
-        computed_available_coords = set(available_positions(self.puzzle))
-        true_available_coords = set([(0,1), (0,2), (1,0), (1,3), (2,1), (2,2)])
-        
-        self.assertEqual(len(computed_available_coords), 6)
-        self.assertSetEqual(computed_available_coords, true_available_coords)
+    # test for the OLDER version
+    # def test_place_pieces_should_update_available_slots(self):
+    #     piece = self.puzzle.bag_of_pieces[1]
+    #     self.puzzle.place(piece, (1, 1))
+    #     piece = self.puzzle.bag_of_pieces[2]
+    #     self.puzzle.place(piece, (1, 2))
+    #
+    #     computed_available_coords = set(available_positions(self.puzzle))
+    #     true_available_coords = set([(0,1), (0,2), (1,0), (1,3), (2,1), (2,2)])
+    #
+    #     self.assertEqual(len(computed_available_coords), 6)
+    #     self.assertSetEqual(computed_available_coords, true_available_coords)
 
 
 if __name__ == '__main__':
