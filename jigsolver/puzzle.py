@@ -77,6 +77,13 @@ class Board():
             yield Border.LEFT.value, self[i, j-1]
 
 
+    def adjacent_empty_slots(self, i, j):
+        for delta_i, delta_j in zip([1,-1,0,0], [0,0,1,-1]):
+            if 0 <= i + delta_i < self.shape[0] and 0<= j + delta_j < self.shape[1] \
+                and isinstance(self[i + delta_i, j + delta_j], Slot):
+                yield i + delta_i, j + delta_j
+
+
 class Slot():
     def __init__(self, id):
         self._id = id
