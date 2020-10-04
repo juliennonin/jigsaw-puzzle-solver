@@ -219,6 +219,7 @@ class Puzzle():
                 piece = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps], i * n_columns + j)
                 self.bag_of_pieces.append(piece)
                 self.board[i,j] = piece
+                piece.position = (i,j)
         return self
 
     def shuffle(self):
