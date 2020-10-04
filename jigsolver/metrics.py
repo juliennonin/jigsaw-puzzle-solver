@@ -33,17 +33,20 @@ def dissimilarity(piece1, piece2, p=2, q=1, lab_space=False):
     for border in Border:
         diss[border.value] = np.power(
             np.sum(np.power(piece1.get_border(border) - piece2.get_border(border.opposite), p)),q)
+
+    piece1 = piece1.lab_to_rgb() if lab_space else piece1
+    piece2 = piece2.lab_to_rgb() if lab_space else piece2
+
     return diss
 
-
-def cho_CM(puzzle):
+def cho_CM(puzzle,lab_space=False):
     """Set the compatibility matrix associated to our current puzzle - Cho paper"""
 
     assert puzzle.bag_of_pieces, "A puzzle should be created"
 
     N = len(puzzle.bag_of_pieces)
 
-    assert puzzle.bag_of_pieces>=10, f"There are only {N} pieces and you call that a puzzle ??"
+    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
 
     CM = np.zeros((N, N, 4))
 
@@ -54,7 +57,7 @@ def cho_CM(puzzle):
     for i, piece1 in enumerate(puzzle.bag_of_pieces):
         for j, piece2 in enumerate(puzzle.bag_of_pieces[:i]):
             for border in Border:
-                CM[i, j, border.value] = dissimilarity(piece1, piece2, p=p, q=q)[border.value]
+                CM[i, j, border.value] = dissimilarity(piece1,piece2,lab_space=lab_space)[border.value]
                 CM[j, i, border.opposite.value] = CM[i, j, border.value]
 
     #turning dissimilarities into compatibilities
@@ -68,7 +71,7 @@ def cho_CM(puzzle):
     return CM
 
 
-def pomeranz_CM(puzzle, p=2, q=1):
+def pomeranz_CM(puzzle, p=2, q=1,lab_space=False):
     """Set the compatibility matrix associated to our current puzzle - Pomeranz paper
     @p,q: To set up the dissimilarity value is compute by L_(p,q) norms of difference between two pieces
     """
@@ -76,6 +79,7 @@ def pomeranz_CM(puzzle, p=2, q=1):
 
     assert puzzle.bag_of_pieces, "A puzzle should be created"
     N=len(puzzle.bag_of_pieces)
+    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
 
     CM=np.zeros((N,N,4))
 
@@ -86,7 +90,7 @@ def pomeranz_CM(puzzle, p=2, q=1):
     for i, piece1 in enumerate(puzzle.bag_of_pieces):
         for j,piece2 in enumerate(puzzle.bag_of_pieces[:i]):
             for border in Border:
-                CM[i,j,border.value]=dissimilarity(piece1,piece2,p=p,q=q)[border.value]
+                CM[i,j,border.value]=dissimilarity(piece1,piece2,p=p,q=q,lab_space=lab_space)[border.value]
                 CM[j,i,border.opposite.value]=CM[i,j,border.value]
 
     # turning dissimilarities into compatibilities
@@ -176,3 +180,17 @@ def neighbor_comparison(ground_truth,solver_output):
     n, m = ground_truth.board.shape
 
     return np.round(np.mean([fraction_of_correct_neighbors((i,j),ground_truth,solver_output) for i in range(n) for j in range(m)]),2)
+
+def BestBuddies_metric(solver_output,BB):
+    """
+        Return the ratio between the number of neighbors who are said to be best buddies and the total number
+        of neighbors. - Pomeranz Paper
+        @solver_output: The position/arrangement of the output of the solver
+        @BB : The best buddies matrix
+
+        N.B. : This metric can be computed without knowing at all the solved puzzle
+
+    """
+    nb_pieces_height,nb_pieces_width=solver_output.shape
+    nb_neigbors=4*(nb_pieces_height-1)*(nb_pieces_width-1)+8+2*(nb_pieces_width+nb_pieces_height-4)
+    return np.round(np.sum(BB==1)/nb_neigbors,2)
