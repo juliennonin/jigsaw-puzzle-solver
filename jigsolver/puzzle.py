@@ -19,6 +19,88 @@ def findtwoFactors(n):
 
     return False
 
+def patch(ps):
+    "Return a function which enables to initialize a Puzzle given a patch_size"
+
+    def create_puzzle(puzzle,is_shuffled=True):
+        height, width, _ = puzzle.img.shape
+        n_rows, n_columns = height // ps, width // ps
+        img_cropped = puzzle.img[:n_rows * ps, :n_columns * ps]
+        ## Populate the board
+        puzzle.board = Board(n_rows, n_columns)
+        for i in range(n_rows):
+            for j in range(n_columns):
+                piece = Piece(img_cropped[i * ps:(i + 1) * ps, j * ps:(j + 1) * ps], i * n_columns + j)
+                puzzle.bag_of_pieces.append(piece)
+                if not (is_shuffled):
+                    puzzle.board[i, j] = piece
+
+        puzzle.patch_size = ps
+        if is_shuffled: puzzle.shuffle() 
+
+
+    return create_puzzle
+
+
+def nb_pieces(np):
+    "Return a function which enables to initialize a Puzzle given a number of pieces"
+    assert np != 2, "Come on, this isn't really a puzzle"
+    assert np <= 300, "This is too complex"
+
+    def create_puzzle(puzzle,is_shuffled=True):
+        height, width, _ = puzzle.img.shape
+        # We check if the number of pieces given is a prime number
+        nb_final_pieces = np if findtwoFactors(np) else np + 1
+        n_rows, n_columns = findtwoFactors(nb_final_pieces)
+        ps = min(height // n_rows, width // n_columns)
+        img_cropped = puzzle.img[:n_rows * ps, :n_columns * ps]
+
+        if np != nb_final_pieces:
+            print(f"I can't perfectly cut your puzzle into {nb_pieces} squared pieces. Instead, I cutted it into {nb_final_pieces} pieces")
+
+        ## Populate the board
+        puzzle.board = Board(n_rows, n_columns)
+        for i in range(n_rows):
+            for j in range(n_columns):
+                piece = Piece(img_cropped[i * ps:(i + 1) * ps, j * ps:(j + 1) * ps], i * n_columns + j)
+                puzzle.bag_of_pieces.append(piece)
+                if not (is_shuffled):
+                    puzzle.board[i, j] = piece
+
+        puzzle.patch_size = ps
+        if is_shuffled: puzzle.shuffle()
+
+
+    return create_puzzle
+
+
+
+def nb_rows_and_columns(rows_and_columns):
+    "Return a function which enables to initialize a Puzzle given a number of rows and a number of columns"
+    assert rows_and_columns[0] >= 3 and rows_and_columns[1] >= 3, "Come on, this isn't really a puzzle"
+    assert rows_and_columns[0] <= 100 and rows_and_columns[1] <= 100, "This is too complex"
+
+    def create_puzzle(puzzle,is_shuffled=True):
+        height, width, _ = puzzle.img.shape
+        n_rows, n_columns = rows_and_columns
+        ps = min(height // n_rows, width // n_columns)
+        img_cropped = puzzle.img[:n_rows * ps, :n_columns * ps]
+
+        ## Populate the board
+        puzzle.board = Board(n_rows, n_columns)
+        for i in range(n_rows):
+            for j in range(n_columns):
+                piece = Piece(img_cropped[i * ps:(i + 1) * ps, j * ps:(j + 1) * ps], i * n_columns + j)
+                puzzle.bag_of_pieces.append(piece)
+                if not(is_shuffled):
+                    puzzle.board[i,j]=piece
+
+        puzzle.patch_size=ps
+        if is_shuffled: puzzle.shuffle()
+
+    return create_puzzle
+
+
 class Border(Enum):
     def __new__(cls, value, slice):
         obj = object.__new__(cls)
@@ -144,15 +226,25 @@ class Piece():
 
 
 class Puzzle():
-    def __init__(self, patch_size=100, seed=0):
+    def __init__(self,img,initializer=patch(100),seed=0):
         '''@patch_size : The size of the pieces wanted by the user
            | Ex : I want to cut an image into pieces of size 100x100 pixels"
         '''
 
-        self.patch_size = patch_size
+        self.img=img
         self.seed = seed
         self.bag_of_pieces = []
-        self.board = None
+        self.initializer=initializer
+        initializer(self,is_shuffled=True)
+
+
+
+    @property
+    def ground_truth(self):
+        original=copy(self)
+        original.initializer(original,is_shuffled=False)
+        return original
+
 
     @property
     def shape(self):
@@ -169,61 +261,14 @@ class Puzzle():
         return [piece for piece in self.bag_of_pieces if not piece.is_placed]
         #≡ return filter(lambda piece: not piece.is_placed, self.bag_of_pieces)
 
-    def create_from_img(self, img,nb_pieces=False,nb_rows_and_columns=False):
-        '''Create the pieces from an img and put them in the board'''
-        assert not(nb_pieces and nb_rows_and_columns), "You can't create your puzzle specifying at the same time " \
-                                                       "its number of pieces, its number of rows and its number of columns. Make a choice"
-
-
-        np.random.seed(self.seed)  # for reproducibility
-
-        #default behaviour
-        height, width, _ = img.shape
-        ps=self.patch_size
-        n_rows,n_columns= height//ps,width//ps
-
-        #** If the user has specified a number of pieces**
-
-        if nb_pieces:
-            assert nb_pieces != 2, "Come on, this isn't really a puzzle"
-            assert nb_pieces <= 300, "This is too complex"
-            #We check if the number of pieces given is a prime number
-            nb_final_pieces=nb_pieces if findtwoFactors(nb_pieces) else nb_pieces+1
-            n_rows,n_columns=findtwoFactors(nb_final_pieces)
-
-            ps = min(height // n_rows, width // n_columns)
-
-            if nb_pieces!=nb_final_pieces:
-                print(f"I can't perfectly cut your puzzle into {nb_pieces} squared pieces. Instead, I cutted it into {nb_final_pieces} pieces")
-
-
-        #** If the user has specified a number of rows and columns**
-
-        if (nb_rows_and_columns):
-            assert nb_rows_and_columns[0] >= 3 and nb_rows_and_columns[1] >= 3, "Come on, this isn't really a puzzle"
-            assert nb_rows_and_columns[0] <= 100 and nb_rows_and_columns[1] <= 100, "This is too complex"
-            n_rows,n_columns = nb_rows_and_columns
-            ps = min(height // n_rows, width // n_columns)
-
-
-        self.patch_size=ps
-
-
-        ## Crop the image for its size to be a multiple of the patch size
-        img_cropped = img[:n_rows * ps, :n_columns * ps]
-    
-        ## Populate the board
-        self.board = Board(n_rows, n_columns)
-        for i in range(n_rows):
-            for j in range(n_columns):
-                piece = Piece(img_cropped[i*ps:(i+1)*ps, j*ps:(j+1)*ps], i * n_columns + j)
-                self.bag_of_pieces.append(piece)
-                self.board[i,j] = piece
-        return self
+    def change_structure(self,new_initializer):
+        self.initializer=new_initializer
+        new_initializer(self)
 
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
         n_rows, n_colums = self.shape
+        np.random.seed(self.seed)  # for reproducibility
         self.board = Board(n_rows, n_colums)
         np.random.shuffle(self.bag_of_pieces)
         for i, piece in enumerate(self.bag_of_pieces):
@@ -297,7 +342,7 @@ class Puzzle():
 
     def __copy__(self):
         " copy the current puzzle "
-        new_puzzle = Puzzle(self.patch_size)
+        new_puzzle = Puzzle(self.img,self.initializer)
         new_puzzle.bag_of_pieces = copy(self.bag_of_pieces)
         new_puzzle.board = deepcopy(self.board)
         return new_puzzle

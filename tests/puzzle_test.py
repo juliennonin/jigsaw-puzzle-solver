@@ -1,5 +1,5 @@
 import unittest
-from jigsolver import Board, Border, Piece, Puzzle, Slot
+from jigsolver.puzzle import *
 from jigsolver.metrics import *
 import numpy as np
 from copy import copy,deepcopy
@@ -8,13 +8,10 @@ import matplotlib.pyplot as plt
 class PuzzleTestCase(unittest.TestCase):
     def setUp(self):
         self.img = np.arange(468).reshape(13,12,3)
-        self.puzzle = Puzzle(patch_size=3)
-        self.puzzle.create_from_img(self.img)
-
+        self.puzzle = Puzzle(self.img,patch(3))
         
         img_real = plt.imread('img/eiffel.jpg')
-        self.eiffel_puzzle = Puzzle(patch_size=100)
-        self.eiffel_puzzle.create_from_img(img_real)
+        self.eiffel_puzzle = Puzzle(img_real,patch(100))
         self.eiffel_puzzle_copy = copy(self.eiffel_puzzle)
 
         # creating a very simple puzzle
@@ -37,7 +34,7 @@ class PuzzleTestCase(unittest.TestCase):
 
         D=B.copy()
 
-        P = Puzzle(patch_size=2)
+        P = Puzzle(np.zeros((2,6,3)),patch(2))
         P.bag_of_pieces = [A, B, C, D]
 
         P_board = Board(1, 4)
@@ -55,16 +52,16 @@ class PuzzleTestCase(unittest.TestCase):
         self.simple_puzzle=P
         self.inferred_puzzle=Q
     
-    def test_puzzle_create_piece_size(self):
-        self.assertEqual(self.eiffel_puzzle.board[0,0].size, 100)
+    def test_puzzle_create_puzzle_and_change_structure(self):
+        self.assertEqual(self.eiffel_puzzle.ground_truth.board[0,0].size, 100)
 
-        self.eiffel_puzzle.create_from_img(self.img,nb_pieces=28)
-        nb_pieces_height=self.eiffel_puzzle.shape[0]//self.eiffel_puzzle.patch_size
-        nb_pieces_width=self.eiffel_puzzle.shape[1]//self.eiffel_puzzle.patch_size
+        self.eiffel_puzzle.change_structure(nb_pieces(24))
+        nb_pieces_height=self.eiffel_puzzle.shape[0]
+        nb_pieces_width=self.eiffel_puzzle.shape[1]
 
-        self.assertEqual(nb_pieces_height*nb_pieces_width,28)
+        self.assertEqual(nb_pieces_height*nb_pieces_width,24)
 
-        self.eiffel_puzzle.create_from_img(self.img, nb_rows_and_columns=(6,7))
+        self.eiffel_puzzle.change_structure(nb_rows_and_columns((6,7)))
         self.assertEqual(self.eiffel_puzzle.shape,(6,7))
 
     def test_create_puzzle_crop_test(self):
@@ -117,8 +114,11 @@ class PuzzleTestCase(unittest.TestCase):
 
 
     def test_puzzle_simple_evaluation(self):
+        solver_output = self.eiffel_puzzle.ground_truth
+        for piece in solver_output.bag_of_pieces:
+            piece._is_placed = True
         # Case where the puzzle is perfectly solved
-        self.assertEqual(simple_evaluation(self.eiffel_puzzle,self.eiffel_puzzle_copy),1)
+        self.assertEqual(simple_evaluation(self.eiffel_puzzle.ground_truth,solver_output),1)
 
         #Case where the puzzle is completely not solved
         self.assertEqual(simple_evaluation(self.simple_puzzle,self.inferred_puzzle),0.5)
@@ -132,10 +132,11 @@ class PuzzleTestCase(unittest.TestCase):
 
 
     def test_puzzle_neighbor_comparison(self):
-        for piece in self.eiffel_puzzle_copy.bag_of_pieces:
+        solver_output=self.eiffel_puzzle.ground_truth
+        for piece in solver_output.bag_of_pieces:
             piece._is_placed=True
         # Case where the puzzle is perfectly solved
-        self.assertEqual(neighbor_comparison(self.eiffel_puzzle, self.eiffel_puzzle_copy), 1)
+        self.assertEqual(neighbor_comparison(self.eiffel_puzzle.ground_truth, solver_output), 1)
 
         # Case where the puzzle is not completely solved
         self.assertEqual(neighbor_comparison(self.simple_puzzle, self.inferred_puzzle), 0.38)
