@@ -1,13 +1,11 @@
 import unittest
-from jigsolver import Puzzle
+from jigsolver.puzzle import *
 import matplotlib.pyplot as plt
 
 class PlacePieceTestCase(unittest.TestCase):
     def setUp(self):
         img = plt.imread('img/peppers.png')[:,:,:3]
-        self.puzzle = Puzzle(patch_size=28)
-        self.puzzle.create_from_img(img)
-        self.puzzle.shuffle()
+        self.puzzle = Puzzle(img,patch(28))
         # puzzle of size 4 × 4
 
     def test_place_piece_should_update_is_placed_attribute(self):

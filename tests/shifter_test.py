@@ -1,15 +1,13 @@
 import unittest
-import matplotlib.pyplot as plt
-from jigsolver import Puzzle,Slot
+from jigsolver.puzzle import *
 from jigsolver.pomeranz_solver.shifter import shifter
-from copy import copy,deepcopy
+from copy import copy
 import numpy as np
 
 class ShifterTestCase(unittest.TestCase):
     def setUp(self):
         img = plt.imread('img/eiffel.jpg')
-        self.puzzle = Puzzle(patch_size=28)
-        self.puzzle.create_from_img(img)
+        self.puzzle = Puzzle(img,patch(100)).ground_truth
 
     def test_should_do_nothing_when_segment_is_all(self):
         segment = []
@@ -32,6 +30,7 @@ class ShifterTestCase(unittest.TestCase):
         for i in range(self.puzzle.shape[0]):
             for j in range(self.puzzle.shape[1]):
                 self.assertTrue(isinstance(self.puzzle.board[i,j],Slot))
+
     def test_should_removecols_and_roll_right(self):
         segment = []
         for i in range(self.puzzle.shape[0]):
