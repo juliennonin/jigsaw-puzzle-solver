@@ -1,21 +1,14 @@
 version: 2.1
-
-orbs:
-  python: circleci/python@0.2.1
-
 jobs:
-  build-and-test:
-    executor: python/default
+  build: 
+    docker:
+      - image: circleci/python:3.7.3
+      
     steps:
       - checkout
-      - python/load-cache
-      - python/install-deps
-      - python/save-cache
       - run:
-          command: ./manage.py test
+          command: |
+            sudo pip3 install matplotlib numpy scikit_image
+            python3 -m unittest ./tests/*
           name: Test
 
-workflows:
-  main:
-    jobs:
-      - build-and-test
