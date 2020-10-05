@@ -72,6 +72,7 @@ def cho_CM(puzzle,lab_space=False):
 
 
 def pomeranz_CM(puzzle, p=2, q=1,lab_space=False):
+
     """Set the compatibility matrix associated to our current puzzle - Pomeranz paper
     @p,q: To set up the dissimilarity value is compute by L_(p,q) norms of difference between two pieces
     """
@@ -79,7 +80,10 @@ def pomeranz_CM(puzzle, p=2, q=1,lab_space=False):
 
     assert puzzle.bag_of_pieces, "A puzzle should be created"
     N=len(puzzle.bag_of_pieces)
-    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
+
+
+    assert N>=4, f"There are only {N} pieces and you call that a puzzle ??"
+
 
     CM=np.zeros((N,N,4))
 

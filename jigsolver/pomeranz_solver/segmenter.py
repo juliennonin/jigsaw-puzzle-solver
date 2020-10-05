@@ -60,7 +60,7 @@ def segmenter(puzzle,BB,n_iter=False):
     '''
     Find the biggest segment of the Puzzle
     @BB: Best Buddies matrix which set the best buddy pieces (have the best compatibility in the compatibility matrix) to 1.
-    @n_iter: iterate n_iter times to find biggest segment, set n_iter to make it dependant of size of the board
+    @n_iter: iterate n_iter times to find biggest segment, set n_iter to False to make it dependant of size of the board
     Return
     @biggest_segment: Biggest segment found in puzzle
     '''
@@ -71,7 +71,7 @@ def segmenter(puzzle,BB,n_iter=False):
     if not n_iter : 
         n_iter = max(5,int((puzzle.shape[0] * puzzle.shape[1]) /5))
 
-    for i in range(n_iter): # iterate n_iter times, #TODO make it dependant of size of the board 
+    for i in range(n_iter): # iterate n_iter times
 
         # Choose randomly first piece
         init_col = np.random.randint(0,puzzle.shape[0])
@@ -85,14 +85,3 @@ def segmenter(puzzle,BB,n_iter=False):
     ## find biggest segment
     biggest_segment = max(segments,key=len)
     return biggest_segment
-
-def remove_all_but_segment(puzzle,segment):
-    ''' 
-    Remove all Pieces from board exect those in the segment 
-    @segment: segement keep in the board (normally keep the biggest segment)
-    '''
-    for i in range(puzzle.shape[0]):
-        for j in range(puzzle.shape[1]):
-            if puzzle.board[i,j] not in segment:
-                puzzle.board[i,j]._is_placed = False
-                puzzle.board[i,j]=Slot(i*puzzle.shape[0]+j)
