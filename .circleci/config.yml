@@ -9,6 +9,6 @@ jobs:
       - run:
           command: |
             sudo pip3 install matplotlib numpy scikit_image
-            python -m unittest discover jigsaw-puzzle-solver "*_test.py"
+            python -m unittest discover ./ "*_test.py"
           name: Test
 
