@@ -33,99 +33,76 @@ def dissimilarity(piece1, piece2, p=2, q=1, lab_space=False):
     for border in Border:
         diss[border.value] = np.power(
             np.sum(np.power(piece1.get_border(border) - piece2.get_border(border.opposite), p)),q)
+
+    piece1 = piece1.lab_to_rgb() if lab_space else piece1
+    piece2 = piece2.lab_to_rgb() if lab_space else piece2
+
     return diss
 
-
-def cho_CM(puzzle):
+def cho_CM(puzzle,lab_space=False):
     """Set the compatibility matrix associated to our current puzzle - Cho paper"""
 
     assert puzzle.bag_of_pieces, "A puzzle should be created"
 
-    CM=[]
+    N = len(puzzle.bag_of_pieces)
 
-    #function enabling to jump from dissimilarities into probabilities
-    h = lambda x,sigma: np.round(np.exp(-x / (2 * (sigma ** 2))),3)
+    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
 
-    for i, piece in enumerate(puzzle.bag_of_pieces):
+    CM = np.zeros((N, N, 4))
 
-        #We need to obtain the dissimilarities between the current
-        #Piece and all the others Piece.
-        f = lambda other_piece: dissimilarity(piece, other_piece)
-        # g = lambda other_piece: list(f(otherPiece).values())
+    # function enabling to jump from dissimilarities into probabilities
+    h = lambda x, sigma: np.round(np.exp(-x / (2 * (sigma ** 2))), 3)
 
-        CM.append([f(otherPiece) for otherPiece in puzzle.bag_of_pieces])
+    #populate the CM with dissimilarities
+    for i, piece1 in enumerate(puzzle.bag_of_pieces):
+        for j, piece2 in enumerate(puzzle.bag_of_pieces[:i]):
+            for border in Border:
+                CM[i, j, border.value] = dissimilarity(piece1,piece2,lab_space=lab_space)[border.value]
+                CM[j, i, border.opposite.value] = CM[i, j, border.value]
 
-        # **Normalization of dissimilarities (suggested by the Cho Paper)**
+    #turning dissimilarities into compatibilities
+    for i in range(N):
+        for border in Border:
+            compatibilities_without_current_piece = np.sort(np.concatenate([CM[i, 0:i, border.value], CM[i, i + 1:, border.value]]))
+            sigma=compatibilities_without_current_piece[1]-compatibilities_without_current_piece[0]
+            sigma = sigma if sigma>0 else 1
+            CM[i, :, border.value] = h(CM[i, :, border.value],sigma)
 
-        #We don't count the current piece for the normalization
-        Values = list((map(f,filter(lambda x: x!=piece,puzzle.bag_of_pieces))))
-
-        #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
-        Values=np.sort(np.array(Values).reshape(-1))
-
-        #kind of standard deviation - handling of the case where there are only two pieces
-        try:
-            sigma=(Values[1]-Values[0]) if (Values[1]-Values[0]!=0) else 1
-        except:
-            sigma=Values[0] if (Values[0]!=0) else 1
-
-        #Normalization
-        for diss in CM[-1]:
-            for i in range(len(diss)):
-                diss[i] = h(diss[i],sigma)
-
-    return np.array(CM)
+    return CM
 
 
-def pomeranz_CM(puzzle, p=2, q=1):
+def pomeranz_CM(puzzle, p=2, q=1,lab_space=False):
     """Set the compatibility matrix associated to our current puzzle - Pomeranz paper
     @p,q: To set up the dissimilarity value is compute by L_(p,q) norms of difference between two pieces
     """
     
 
     assert puzzle.bag_of_pieces, "A puzzle should be created"
+    N=len(puzzle.bag_of_pieces)
+    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
 
-    CM=[]
+    CM=np.zeros((N,N,4))
 
     #function enabling to jump from dissimilarities into probabilities
     h = lambda x,quartile: np.round(np.exp(-x/quartile),3)
 
-    for i, piece in enumerate(puzzle.bag_of_pieces):
+    # populate the CM with dissimilarities
+    for i, piece1 in enumerate(puzzle.bag_of_pieces):
+        for j,piece2 in enumerate(puzzle.bag_of_pieces[:i]):
+            for border in Border:
+                CM[i,j,border.value]=dissimilarity(piece1,piece2,p=p,q=q,lab_space=lab_space)[border.value]
+                CM[j,i,border.opposite.value]=CM[i,j,border.value]
 
-        #We need to obtain the dissimilarities between the current
-        #Piece and all the others Piece.
-        f = lambda other_piece: dissimilarity(piece, other_piece, p=p, q=q)
+    # turning dissimilarities into compatibilities
+    for i in range(N):
+        for border in Border:
+            compatibilities_without_current_piece=np.concatenate([CM[i,0:i,border.value],CM[i,i+1:,border.value]])
+            current_quartile=np.quantile(compatibilities_without_current_piece,q=0.25)
+            current_quartile = current_quartile if current_quartile>0 else 1
+            CM[i,:,border.value]=h(CM[i,:,border.value],current_quartile)
+        CM[i][i]=0
 
-        left=lambda otherPiece: f(otherPiece)[Border.LEFT.value]
-        right=lambda otherPiece : f(otherPiece)[Border.RIGHT.value]
-        top=lambda otherPiece : f(otherPiece)[Border.TOP.value]
-        bottom=lambda otherPiece : f(otherPiece)[Border.BOTTOM.value]
-
-        CM.append([f(otherPiece) for otherPiece in puzzle.bag_of_pieces])
-
-        # **Normalization of dissimilarities (suggested by the Cho Paper)**
-
-        #We don't count the current piece for the normalization
-        Left = list(map(left, filter(lambda p: p.id != piece.id, puzzle.bag_of_pieces)))
-        Right = list((map(right, filter(lambda p: p.id != piece.id, puzzle.bag_of_pieces))))
-        Top = list((map(top, filter(lambda p: p.id != piece.id, puzzle.bag_of_pieces))))
-        Bottom = list((map(bottom, filter(lambda p: p.id != piece.id, puzzle.bag_of_pieces))))
-
-        #Then, we need the two smallest dissimilarities so we can sort our list values to obtain them
-        quartiles={}
-        quartiles[Border.LEFT.value] = np.quantile(Left,q=0.25) if np.quantile(Left,q=0.25)!=0 else 1
-        quartiles[Border.RIGHT.value] = np.quantile(Right, q=0.25) if np.quantile(Right,q=0.25)!=0 else 1
-        quartiles[Border.TOP.value] = np.quantile(Top, q=0.25) if np.quantile(Top,q=0.25)!=0 else 1
-        quartiles[Border.BOTTOM.value] = np.quantile(Bottom,q=0.25) if np.quantile(Bottom,q=0.25)!=0 else 1
-
-        #Normalization
-        for diss in CM[-1]:
-            for i in range(len(diss)):
-                diss[i]=h(diss[i], quartiles[i])
-
-    return np.array(CM)
-  
-
+    return CM
   
 def simple_evaluation(ground_truth,solver_output):
     """
@@ -203,3 +180,17 @@ def neighbor_comparison(ground_truth,solver_output):
     n, m = ground_truth.board.shape
 
     return np.round(np.mean([fraction_of_correct_neighbors((i,j),ground_truth,solver_output) for i in range(n) for j in range(m)]),2)
+
+def BestBuddies_metric(solver_output,BB):
+    """
+        Return the ratio between the number of neighbors who are said to be best buddies and the total number
+        of neighbors. - Pomeranz Paper
+        @solver_output: The position/arrangement of the output of the solver
+        @BB : The best buddies matrix
+
+        N.B. : This metric can be computed without knowing at all the solved puzzle
+
+    """
+    nb_pieces_height,nb_pieces_width=solver_output.shape
+    nb_neigbors=4*(nb_pieces_height-1)*(nb_pieces_width-1)+8+2*(nb_pieces_width+nb_pieces_height-4)
+    return np.round(np.sum(BB==1)/nb_neigbors,2)

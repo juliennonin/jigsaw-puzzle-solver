@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
 from copy import copy, deepcopy
-from skimage import io, color
+from skimage import  color
 
 '''
 Here we define the way we see a Puzzle. Many classes are defined in this file and are useful for any solvers.
@@ -183,7 +183,7 @@ class Slot():
 
 class Piece():
     def __init__(self, picture, id=None):
-        picture = np.array(picture, dtype=int)
+        picture = np.array(picture)
         assert picture.ndim == 3, "The picture must be 3-dimensional, i.e. of shape (n,n,3)"
         assert picture.shape[2] == 3, "Each pixel of the picture must have 3 color values"
         assert picture.shape[0] == picture.shape[1], "The image must not be rectangular but squared in shape"
@@ -208,10 +208,10 @@ class Piece():
         return self.picture[border.slice]
 
     def rgb_to_lab(self):
-        return color.rgb2lab(self.picture)
+        return Piece(color.rgb2lab(self.picture),self.id)
 
     def lab_to_rgb(self):
-        return color.lab2rgb(self.picture)
+        return Piece(color.lab2rgb(self.picture),self.id)
 
     def _clean(self):
         self._is_placed = False
