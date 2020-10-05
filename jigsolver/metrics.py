@@ -46,7 +46,7 @@ def cho_CM(puzzle,lab_space=False):
 
     N = len(puzzle.bag_of_pieces)
 
-    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
+    assert puzzle.bag_of_pieces>=10, f"There are only {N} pieces and you call that a puzzle ??"
 
     CM = np.zeros((N, N, 4))
 
@@ -57,7 +57,7 @@ def cho_CM(puzzle,lab_space=False):
     for i, piece1 in enumerate(puzzle.bag_of_pieces):
         for j, piece2 in enumerate(puzzle.bag_of_pieces[:i]):
             for border in Border:
-                CM[i, j, border.value] = dissimilarity(piece1,piece2,lab_space=lab_space)[border.value]
+                CM[i, j, border.value] = dissimilarity(piece1, piece2, p=p, q=q)[border.value]
                 CM[j, i, border.opposite.value] = CM[i, j, border.value]
 
     #turning dissimilarities into compatibilities
@@ -72,6 +72,7 @@ def cho_CM(puzzle,lab_space=False):
 
 
 def pomeranz_CM(puzzle, p=2, q=1,lab_space=False):
+
     """Set the compatibility matrix associated to our current puzzle - Pomeranz paper
     @p,q: To set up the dissimilarity value is compute by L_(p,q) norms of difference between two pieces
     """
@@ -79,7 +80,10 @@ def pomeranz_CM(puzzle, p=2, q=1,lab_space=False):
 
     assert puzzle.bag_of_pieces, "A puzzle should be created"
     N=len(puzzle.bag_of_pieces)
+
+
     assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
+
 
     CM=np.zeros((N,N,4))
 
