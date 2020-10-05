@@ -1,5 +1,6 @@
 from jigsolver.puzzle import *
 import numpy as np
+from jigsolver.pomeranz_solver.shifter import update_pieces_positions
 
 
 def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
@@ -42,7 +43,10 @@ def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
                                isinstance(piece, Piece)]
             for piece in puzzle.pieces_remaining:
                 scores = [compatibilites[piece.id, adjacent.id, position] for position, adjacent in adjacent_pieces]
-                M[i, j, piece.id] = sum(scores) / len(scores)
+                if len(scores) == 0 :
+                    M[i, j, piece.id] = np.inf
+                else : 
+                    M[i, j, piece.id] = sum(scores) / len(scores)
 
     def border_is_empty(M, border):
         return np.all(M[border.slice] <= 0) and np.any(M[border.slice] != -1)
@@ -87,9 +91,12 @@ def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
         update_M(piece_id, coords)
         if display:
             puzzle.display()
+    
+    # Put the correct positions of the pieces (if rolling the position is not updated)
+    if rolling :
+        update_pieces_positions
 
 
-# %%
 def naiv_greedy_placer(puzzle, compatibilities, display=False):
     def decide_piece_to_add(puzzle, compatibilities):
         positions = list(available_positions(puzzle))
