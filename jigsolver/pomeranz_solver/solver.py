@@ -4,10 +4,10 @@ from jigsolver.metrics import pomeranz_CM,BestBuddies_metric
 from jigsolver.pomeranz_solver.shifter import shifter
 
 
-def solve(puzzle, compatibility_metric=pomeranz_CM, placer=greedy_placer, n_iter_max = 5, acceptable_score =0.98, display=True):
+def solve(puzzle, compatibility_metric=pomeranz_CM, placer=greedy_placer, n_iter_max = 5, acceptable_score =0.98, display=True, lab_space = False):
     '''Solve a puzzle'''
 
-    CM = compatibility_metric(puzzle)
+    CM = compatibility_metric(puzzle,lab_space=lab_space)
     BB = BestBuddies_matrix(CM)
     
     placer(puzzle,CM,rolling=True)
