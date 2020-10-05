@@ -39,14 +39,10 @@ def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
 
         ## Update the scores (of all remaining pieces) for all neighboring slots
         for i, j in puzzle.board.adjacent_empty_slots(*slot_coords):  # fore each neighboring slot
-            adjacent_pieces = [(position, piece) for position, piece in puzzle.board.neighbors(i, j) if
-                               isinstance(piece, Piece)]
+            adjacent_pieces = [(position, piece) for position, piece in puzzle.board.neighbors(i, j) if isinstance(piece, Piece)]
             for piece in puzzle.pieces_remaining:
                 scores = [compatibilites[piece.id, adjacent.id, position] for position, adjacent in adjacent_pieces]
-                if len(scores) == 0 :
-                    M[i, j, piece.id] = np.inf
-                else : 
-                    M[i, j, piece.id] = sum(scores) / len(scores)
+                M[i, j, piece.id] = sum(scores) / len(scores)
 
     def border_is_empty(M, border):
         return np.all(M[border.slice] <= 0) and np.any(M[border.slice] != -1)
