@@ -49,8 +49,3 @@ Further examples can be found in the notebook "sandbox.ipynb"
 - [x] Implement Placer 
 - [x] Implement Segmenter
 - [ ] Implement Shifter
-
-
-## References 
-
-[1]: Pomeranz, D., Shemesh, M., & Ben-Shahar, O. (2011, June). A fully automated greedy square jigsaw puzzle solver. In CVPR 2011 (pp. 9-16). IEEE.

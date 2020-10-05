@@ -13,6 +13,10 @@ def BestBuddies_matrix(CM,diag=True):
     @CM: compatibility matrix
     return
     @BB: Best Buddies matrix which set the best buddy pieces (have the best compatibility in the compatibility matrix) to 1.
+
+    N.B. : Two parts are best buddies if both “agree” that the other part is their most likely neighbor (according
+    to a compatibility metric) - Pomeranz Paper
+
     '''
     if diag :
         for k in range(CM.shape[2]):
@@ -29,6 +33,8 @@ def BestBuddies_matrix(CM,diag=True):
                 #BB[best_neighbour,i,b.opposite.value] = 1
 
     return BB
+
+
 
 
 def find_segment(puzzle,segment,pos,BB):
