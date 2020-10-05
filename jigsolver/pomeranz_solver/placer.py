@@ -71,7 +71,10 @@ def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
 
     ## Init
     n_pieces_remaining = len(list(puzzle.pieces_remaining))
-    if n_pieces_remaining == n_pieces:
+    if any(puzzle.pieces_placed):
+        for piece in puzzle.pieces_placed:
+            update_M(piece.id, piece.position)
+    else:
         M[n // 2, m // 2, 0] = 1
 
     ## Main loop: find the best piece-slot pair and place it
@@ -84,7 +87,6 @@ def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
         update_M(piece_id, coords)
         if display:
             puzzle.display()
-            # plt.imshow(np.mean(M, axis=2))
 
 
 # %%
