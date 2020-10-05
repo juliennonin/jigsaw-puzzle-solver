@@ -31,8 +31,9 @@ def patch(ps):
         for i in range(n_rows):
             for j in range(n_columns):
                 piece = Piece(img_cropped[i * ps:(i + 1) * ps, j * ps:(j + 1) * ps], i * n_columns + j)
-                puzzle.bag_of_pieces.append(piece)
-                if not (is_shuffled):
+                if is_shuffled:
+                    puzzle.bag_of_pieces.append(piece)
+                else:
                     puzzle.board[i, j] = piece
 
         puzzle.patch_size = ps
@@ -45,7 +46,7 @@ def patch(ps):
 def nb_pieces(np):
     "Return a function which enables to initialize a Puzzle given a number of pieces"
     assert np != 2, "Come on, this isn't really a puzzle"
-    assert np <= 300, "This is too complex"
+    assert np <= 500, "This is too complex"
 
     def create_puzzle(puzzle,is_shuffled=True):
         height, width, _ = puzzle.img.shape
@@ -63,8 +64,9 @@ def nb_pieces(np):
         for i in range(n_rows):
             for j in range(n_columns):
                 piece = Piece(img_cropped[i * ps:(i + 1) * ps, j * ps:(j + 1) * ps], i * n_columns + j)
-                puzzle.bag_of_pieces.append(piece)
-                if not (is_shuffled):
+                if is_shuffled:
+                    puzzle.bag_of_pieces.append(piece)
+                else:
                     puzzle.board[i, j] = piece
 
         puzzle.patch_size = ps
@@ -91,9 +93,10 @@ def nb_rows_and_columns(rows_and_columns):
         for i in range(n_rows):
             for j in range(n_columns):
                 piece = Piece(img_cropped[i * ps:(i + 1) * ps, j * ps:(j + 1) * ps], i * n_columns + j)
-                puzzle.bag_of_pieces.append(piece)
-                if not(is_shuffled):
-                    puzzle.board[i,j]=piece
+                if is_shuffled:
+                    puzzle.bag_of_pieces.append(piece)
+                else:
+                    puzzle.board[i, j] = piece
 
         puzzle.patch_size=ps
         if is_shuffled: puzzle.shuffle()
@@ -241,8 +244,8 @@ class Puzzle():
 
     @property
     def ground_truth(self):
+        '''return the ground truth arrangement '''
         original=copy(self)
-        original.bag_of_pieces=[]
         original.initializer(original,is_shuffled=False)
         return original
 
@@ -269,13 +272,16 @@ class Puzzle():
 
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
-        n_rows, n_colums = self.shape
+        n_rows, n_columns = self.shape
         np.random.seed(self.seed)  # for reproducibility
-        self.board = Board(n_rows, n_colums)
+        self.board = Board(n_rows, n_columns)
         np.random.shuffle(self.bag_of_pieces)
-        for i, piece in enumerate(self.bag_of_pieces):
+        self.new_ids={}
+
+        for i,piece in enumerate(self.bag_of_pieces):
             piece._is_placed = False
-            piece._id = i
+            self.new_ids[piece.id] = i
+            piece._id=i
 
     
     def place(self, piece, coords):
@@ -327,9 +333,10 @@ class Puzzle():
 
         assert self.board, 'A board must be created'
         assert not(self.pieces_remaining), 'All the pieces must be placed to call this function'
-        assert (id in [piece.id for piece in self.bag_of_pieces]), 'The id provided should correspond to the id of ' \
+        assert (self.new_ids[id] in [piece.id for piece in self.bag_of_pieces]), 'The id provided should correspond to the id of ' \
                                                                    'a Piece in the Puzzle !'
         n,m = self.shape
+
         for i in range(n):
             for j in range(m):
                 if (self.board[i,j].id==id):
