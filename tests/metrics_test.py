@@ -34,7 +34,7 @@ class BorderTestCase(unittest.TestCase):
         self.assertTrue(np.sum(BB==1)==0)
 
     def test_BestBuddies_metric(self):
-        P=Puzzle()
+        P=Puzzle(np.zeros((3,3,3)),patch(1))
         P.board=Board(3,3)
         BB1 = BestBuddies_matrix(self.cm1)
         BB2 = BestBuddies_matrix(self.cm2)

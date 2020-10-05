@@ -242,6 +242,7 @@ class Puzzle():
     @property
     def ground_truth(self):
         original=copy(self)
+        original.bag_of_pieces=[]
         original.initializer(original,is_shuffled=False)
         return original
 
