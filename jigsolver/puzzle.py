@@ -264,6 +264,7 @@ class Puzzle():
 
     def change_structure(self,new_initializer):
         self.initializer=new_initializer
+        self.bag_of_pieces=[]
         new_initializer(self)
 
     def shuffle(self):
@@ -314,7 +315,7 @@ class Puzzle():
         plt.yticks(np.arange(-.5, vsize+1, ps), np.arange(0, vsize+1, ps))
     
         plt.imshow(puzzle_plot)
-        plt.show()
+        # plt.show()
 
     def find_position(self,id):
         '''

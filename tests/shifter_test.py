@@ -7,7 +7,7 @@ import numpy as np
 class ShifterTestCase(unittest.TestCase):
     def setUp(self):
         img = plt.imread('img/eiffel.jpg')
-        self.puzzle = Puzzle(img,patch(28)).ground_truth
+        self.puzzle = Puzzle(img,patch(100)).ground_truth
 
     def test_should_do_nothing_when_segment_is_all(self):
         segment = []
