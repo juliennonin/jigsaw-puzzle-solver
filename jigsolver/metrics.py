@@ -46,7 +46,7 @@ def cho_CM(puzzle,lab_space=False):
 
     N = len(puzzle.bag_of_pieces)
 
-    assert N>=2, f"There are only {N} pieces and you call that a puzzle ??"
+    assert N>=3, f"There are only {N} pieces and you call that a puzzle ??"
 
     CM = np.zeros((N, N, 4))
 
@@ -82,7 +82,7 @@ def pomeranz_CM(puzzle, p=2, q=1,lab_space=False):
     N=len(puzzle.bag_of_pieces)
 
 
-    assert N>=4, f"There are only {N} pieces and you call that a puzzle ??"
+    assert N>=3, f"There are only {N} pieces and you call that a puzzle ??"
 
 
     CM=np.zeros((N,N,4))
@@ -154,7 +154,7 @@ def fraction_of_correct_neighbors(true_pos,ground_truth,solver_output):
     current_Piece=ground_truth.board[i,j]
 
     #we need to find the position of the current piece in the solver's output
-    inferred_pos=solver_output.find_position(current_Piece.id)
+    inferred_pos=solver_output.find_position(current_Piece)
     r,s=inferred_pos
 
     nb_incorrect_neighbors=0

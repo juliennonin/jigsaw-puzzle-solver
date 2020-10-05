@@ -3,7 +3,7 @@ import numpy as np
 from jigsolver.pomeranz_solver.shifter import update_pieces_positions
 
 
-def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
+def greedy_placer(puzzle, compatibilities, rolling=True, display=False):
     """Place the remaining pieces of a given a partially contructed puzzle
     in a greedy manner.
     For each remaining piece and for each available
@@ -13,7 +13,7 @@ def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
     pair (piece - position) that gets the highest score.
     Args:
         puzzle [Puzzle]: puzzle with empty or partially filled board
-        compatibilites [N×N array]: compatibilities[p,q] is the compatibility
+        compatibilities [N×N array]: compatibilities[p,q] is the compatibility
             score between pieces #p and #q in the puzzle.
         rolling [bool, optional]: If set to True, the puzzle pieces are in a
             "floating" state: Each time a piece is placed at a border, all
@@ -41,8 +41,8 @@ def greedy_placer(puzzle, compatibilites, rolling=True, display=False):
         for i, j in puzzle.board.adjacent_empty_slots(*slot_coords):  # fore each neighboring slot
             adjacent_pieces = [(position, piece) for position, piece in puzzle.board.neighbors(i, j) if isinstance(piece, Piece)]
             for piece in puzzle.pieces_remaining:
-                scores = [compatibilites[piece.id, adjacent.id, position] for position, adjacent in adjacent_pieces]
-                M[i, j, piece.id] = sum(scores) / len(scores)
+                scores = [compatibilities[piece.id, adjacent.id, position] for position, adjacent in adjacent_pieces]
+                M[i, j, piece.id] = sum(scores) / len(scores) if len(scores)>0 else 0
 
     def border_is_empty(M, border):
         return np.all(M[border.slice] <= 0) and np.any(M[border.slice] != -1)
