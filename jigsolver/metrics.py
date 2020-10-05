@@ -154,8 +154,9 @@ def fraction_of_correct_neighbors(true_pos,ground_truth,solver_output):
     current_Piece=ground_truth.board[i,j]
 
     #we need to find the position of the current piece in the solver's output
-    inferred_pos=solver_output.find_position(current_Piece)
+    inferred_pos=solver_output.find_position(solver_output.new_ids[current_Piece.id])
     r,s=inferred_pos
+
 
     nb_incorrect_neighbors=0
     nb_neigbors=0

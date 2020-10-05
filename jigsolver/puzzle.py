@@ -272,12 +272,15 @@ class Puzzle():
 
     def shuffle(self):
         '''Took all pieces from the board to the bag of pieces, and shuffle it'''
-        n_rows, n_colums = self.shape
+        n_rows, n_columns = self.shape
         np.random.seed(self.seed)  # for reproducibility
-        self.board = Board(n_rows, n_colums)
+        self.board = Board(n_rows, n_columns)
         np.random.shuffle(self.bag_of_pieces)
+        self.new_ids={}
+
         for i,piece in enumerate(self.bag_of_pieces):
             piece._is_placed = False
+            self.new_ids[piece.id] = i
             piece._id=i
 
     
@@ -320,7 +323,7 @@ class Puzzle():
         plt.imshow(puzzle_plot)
         # plt.show()
 
-    def find_position(self,Piece):
+    def find_position(self,id):
         '''
         find the position of the piece with given id 
         @id: given id
@@ -330,12 +333,13 @@ class Puzzle():
 
         assert self.board, 'A board must be created'
         assert not(self.pieces_remaining), 'All the pieces must be placed to call this function'
-        assert (Piece.id in [piece.id for piece in self.bag_of_pieces]), 'The id provided should correspond to the id of ' \
+        assert (self.new_ids[id] in [piece.id for piece in self.bag_of_pieces]), 'The id provided should correspond to the id of ' \
                                                                    'a Piece in the Puzzle !'
         n,m = self.shape
+
         for i in range(n):
             for j in range(m):
-                if (self.board[i,j]==Piece):
+                if (self.board[i,j].id==id):
                     return (i,j)
 
     def clean(self):

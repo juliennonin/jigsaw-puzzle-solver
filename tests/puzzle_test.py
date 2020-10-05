@@ -33,8 +33,9 @@ class PuzzleTestCase(unittest.TestCase):
         C = Piece(C, 2)
 
         D=B.copy()
+        D._id=3
 
-        P = Puzzle(np.zeros((2,6,3)),patch(2))
+        P = Puzzle(np.zeros((2,8,3)),patch(2))
         P.bag_of_pieces = [A, B, C, D]
 
         P_board = Board(1, 4)
@@ -45,8 +46,12 @@ class PuzzleTestCase(unittest.TestCase):
         P.place(D,(0,3))
 
         Q=deepcopy(P)
-        Q.board[0,0]=B
-        Q.board[0,1]=A
+        first_piece=Q.board[0,0]
+        Q.board[0,0]=Q.board[0,1]
+        Q.board[0,1]=first_piece
+        Q.board[0,0]._id=0
+        Q.board[0,1]._id=1
+        Q.new_ids={0:1,1:0,2:2,3:3}
 
 
         self.simple_puzzle=P
@@ -126,6 +131,7 @@ class PuzzleTestCase(unittest.TestCase):
 
     def test_puzzle_fraction_of_correct_neighbors(self):
         self.assertEqual(fraction_of_correct_neighbors((0, 0), self.simple_puzzle, self.inferred_puzzle), 0)
+
         self.assertEqual(fraction_of_correct_neighbors((0, 1), self.simple_puzzle, self.inferred_puzzle), 0)
         self.assertEqual(fraction_of_correct_neighbors((0,2),self.simple_puzzle,self.inferred_puzzle), 0.5)
         self.assertEqual(fraction_of_correct_neighbors((0, 3), self.simple_puzzle, self.inferred_puzzle), 1)
@@ -133,8 +139,10 @@ class PuzzleTestCase(unittest.TestCase):
 
     def test_puzzle_neighbor_comparison(self):
         solver_output=self.eiffel_puzzle.ground_truth
+        solver_output.new_ids={}
         for piece in solver_output.bag_of_pieces:
             piece._is_placed=True
+            solver_output.new_ids[piece.id]=piece.id
         # Case where the puzzle is perfectly solved
         self.assertEqual(neighbor_comparison(self.eiffel_puzzle.ground_truth, solver_output), 1)
 
