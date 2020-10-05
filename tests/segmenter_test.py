@@ -19,11 +19,18 @@ class PuzzleTestCase(unittest.TestCase):
         img = np.array([[[250., 250., 250.],[251., 251., 251.],[253., 253., 253.]],
                         [[  0.,   0.,   0.],[  0.,   0.,   0.],[  0.,   0.,   0.]],
                         [[  0.,   0.,   0.],[  0.,   0.,   0.],[  0.,   0.,   0.]]])
-        bw_puzzle = Puzzle(img,patch(1)).ground_truth
+        bw_puzzle = Puzzle(img,patch(1))
+        n_rows,n_columns=bw_puzzle.shape
+
+        #We place the pieces in the 'natural order'
+        bw_puzzle.bag_of_pieces=[]
+        ps = 1
+        for i in range(n_rows):
+            for j in range(n_columns):
+                piece = Piece(img[i * ps:(i + 1) * ps, j * ps:(j + 1) * ps], i * n_columns + j)
+                bw_puzzle.bag_of_pieces.append(piece)
 
         bw_puzzle.clean()
-        print(len(bw_puzzle.bag_of_pieces))
-        print(bw_puzzle.bag_of_pieces[0].picture)
 
         for i in range(bw_puzzle.shape[0]):
             for j in range(bw_puzzle.shape[1]):
