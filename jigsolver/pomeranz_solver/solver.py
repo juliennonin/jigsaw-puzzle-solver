@@ -8,11 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def solve(puzzle, compatibility_metric=pomeranz_CM, placer=greedy_placer, n_iter_max = 5, acceptable_score =0.98, display=True, lab_space_set = False, Auto_chose = False):
-    '''
+    """
     Solve a puzzle with different color space and output the best result automatically.
     The best result means biggest sum of the score of evaluations.
     The color space can also be set manually.
-    '''
+    """
 
     Simple_eval=[]
     Neighbor_eval=[]
