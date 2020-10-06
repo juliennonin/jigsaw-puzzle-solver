@@ -8,7 +8,8 @@ jobs:
       - checkout
       - run:
           command: |
-            sudo pip3 install matplotlib numpy scikit_image
+            sudo pip3 install matplotlib numpy scikit_image pylint
+            pylint jigsolver
             python -m unittest discover ./ "*_test.py"
           name: Test
 
